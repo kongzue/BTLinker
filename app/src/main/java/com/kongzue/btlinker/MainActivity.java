@@ -78,6 +78,7 @@ public class MainActivity extends BaseActivity {
         
         LinkUtil.DEBUGMODE = true;
         linkUtil = new LinkUtil();
+        
     }
     
     private ProgressDialog progressDialog;
