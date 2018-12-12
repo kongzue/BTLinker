@@ -18,6 +18,8 @@ Demo预览图如下：
 
 ![BTLinker](https://github.com/kongzue/Res/raw/master/app/src/main/res/mipmap-xxxhdpi/img_btlinker.jpg)
 
+Demo下载：https://fir.im/apps/5c10ea09959d696f5af60385
+
 ### 使用方法
 1) 从 Maven 仓库或 jCenter 引入：
 Maven仓库：
