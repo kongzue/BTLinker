@@ -21,6 +21,8 @@ import com.kongzue.btutil.LinkUtil;
 import com.kongzue.btutil.interfaces.OnBtSocketResponseListener;
 import com.kongzue.btutil.interfaces.OnLinkStatusChangeListener;
 
+import static com.kongzue.btutil.LinkUtil.ERROR_BREAK;
+
 @Layout(R.layout.activity_main)
 public class MainActivity extends BaseActivity {
     
@@ -129,12 +131,20 @@ public class MainActivity extends BaseActivity {
                             public void onFailed(final int errorCode) {
                                 progressDialog.dismiss();
                                 toast("错误：" + errorCode);
+                                
+                                if (errorCode == ERROR_BREAK) {
+                                    toast("连接中断");
+                                    editName.setEnabled(true);
+                                    editUuid.setEnabled(true);
+                                    btnLink.setEnabled(true);
+                                    boxConnected.setVisibility(View.GONE);
+                                }
                             }
                         })
                         .setOnBtSocketResponseListener(new OnBtSocketResponseListener() {
                             @Override
                             public void onResponse(String msg) {
-                                log(">>>"+msg);
+                                log(">>>" + msg);
                                 txtGetMsg.setText(msg);
                             }
                         });

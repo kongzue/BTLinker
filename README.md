@@ -2,10 +2,10 @@
 蓝牙连接封装库，适用于智能硬件蓝牙通讯。
 
 <a href="https://github.com/kongzue/BTLinker/">
-<img src="https://img.shields.io/badge/BTLinker-1.0.0-green.svg" alt="Kongzue BTLinker">
+<img src="https://img.shields.io/badge/BTLinker-1.0.1-green.svg" alt="Kongzue BTLinker">
 </a>
-<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.0/link">
-<img src="https://img.shields.io/badge/Maven-1.0.0-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.1/link">
+<img src="https://img.shields.io/badge/Maven-1.0.1-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -25,14 +25,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.smart</groupId>
   <artifactId>btutil</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.smart:btutil:1.0.0'
+implementation 'com.kongzue.smart:btutil:1.0.1'
 ```
 
 2) 初始化 LinkUtil
@@ -58,7 +58,7 @@ linkUtil.setUUID(uuid)
 
     @Override
     public void onFailed(int errorCode) {
-        //连接错误
+        //连接错误，详见《连接错误代码》章节
     }
 })
 
@@ -101,6 +101,7 @@ ERROR_START_BT | -2 | 无法启动蓝牙
 ERROR_NOT_FOUND_DEVICE | -3 | 未找到目标设备
 ERROR_NOT_CONNECTED | -4 | 未建立连接
 ERROR_SOCKET_ERROR | -70 | Socket故障
+ERROR_BREAK | -50 | 连接中断
 
 ## 关于权限
 您需要申请蓝牙权限后才可以正常使用
@@ -148,5 +149,9 @@ limitations under the License.
 ```
 
 ## 更新日志
+v1.0.1：
+- 新增连接后的断开校验；
+- 修改建立连接逻辑，连接更稳定；
+
 v1.0.0：
 - 首次上传；
