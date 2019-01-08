@@ -2,10 +2,10 @@
 蓝牙连接封装库，适用于智能硬件蓝牙通讯，使用 SPP 服务（稍后会支持BLE）。
 
 <a href="https://github.com/kongzue/BTLinker/">
-<img src="https://img.shields.io/badge/BTLinker-1.0.2-green.svg" alt="Kongzue BTLinker">
+<img src="https://img.shields.io/badge/BTLinker-1.0.3-green.svg" alt="Kongzue BTLinker">
 </a>
-<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.2/link">
-<img src="https://img.shields.io/badge/Maven-1.0.2-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.3/link">
+<img src="https://img.shields.io/badge/Maven-1.0.3-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -20,6 +20,14 @@ Demo预览图如下：
 
 Demo下载：https://fir.im/BTLinker
 
+## ⚠前言
+
+目前仅支持 SPP 服务模式，BLE 模式正在开发中。
+
+请注意，因蓝牙 Socket 存在天坑，数据包可能发生粘包情况，请您与硬件端约定一个消息结束符（默认为各种回车符） 为结尾，来代表此条消息结束，否则软件层面上无法得知消息结束会继续等待后续的消息导致无法通过监听器吐出任何数据。
+
+请注意，因蓝牙 Socket 存在天坑，偶尔发送数据包会存在丢包的风险导致硬件端未接受到指令，建议发送指令后服务端返回个约定的执行成功指令给客户端，若没有建议客户端重复发送之前的指令直到成功。
+
 ### 使用方法
 1) 从 Maven 仓库或 jCenter 引入：
 Maven仓库：
@@ -27,14 +35,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.smart</groupId>
   <artifactId>btutil</artifactId>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.smart:btutil:1.0.2'
+implementation 'com.kongzue.smart:btutil:1.0.3'
 ```
 
 2) 初始化 SPPLinkUtil
@@ -151,6 +159,9 @@ limitations under the License.
 ```
 
 ## 更新日志
+v1.0.3：
+- 修复了一些bug；
+
 v1.0.2：
 - 修改逻辑，并将目前 LinkUtil 改名为 SPPLinkUtil；
 - 修复了一些bug；

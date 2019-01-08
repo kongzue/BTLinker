@@ -108,7 +108,7 @@ public class MainActivity extends BaseActivity {
                     toast("蓝牙名称不能为空");
                     return;
                 }
-                
+                SPPLinkUtil.DEBUGMODE = true;
                 SPPLinkUtil.setUUID(uuid)
                         .setOnLinkStatusChangeListener(new OnLinkStatusChangeListener() {
                             @Override
@@ -142,7 +142,7 @@ public class MainActivity extends BaseActivity {
                         .setOnBtSocketResponseListener(new OnBtSocketResponseListener() {
                             @Override
                             public void onResponse(String msg) {
-                                log(">>>" + msg);
+                                log("msg:"+msg);
                                 txtGetMsg.setText(msg);
                             }
                         });

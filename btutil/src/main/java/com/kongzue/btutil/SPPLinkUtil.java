@@ -199,7 +199,7 @@ public class SPPLinkUtil {
                 if (allDevice != null) {
                     if (allDevice.size() == 0) {
                         String msg = "附近没有任何可以连接的蓝牙设备";
-                        linkStatusChange(true,ERROR_NO_DEVICE,msg);
+                        linkStatusChange(true, ERROR_NO_DEVICE, msg);
                         
                         return;
                     } else {
@@ -215,7 +215,7 @@ public class SPPLinkUtil {
                             }
                             if (isNotHave) {
                                 String msg = "未找到要连接的目标设备";
-                                linkStatusChange(true,ERROR_NOT_FOUND_DEVICE,msg);
+                                linkStatusChange(true, ERROR_NOT_FOUND_DEVICE, msg);
                                 return;
                             }
                         }
@@ -268,28 +268,28 @@ public class SPPLinkUtil {
             public void run() {
                 device = bluetooth.getRemoteDevice(map.get("address") + "");
                 
-                //开始连接
-                try {
-                    //socket = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
-                    int sdk = Build.VERSION.SDK_INT;
-                    if (sdk >= 10) {
-                        socket = device.createInsecureRfcommSocketToServiceRecord(UUID.fromString(UUIDStr));
-                    } else {
-                        socket = device.createRfcommSocketToServiceRecord(UUID.fromString(UUIDStr));
-                    }
-                } catch (IOException e) {
-                    String msg = "连接失败";
-                    linkStatusChange(true,ERROR_CONNECTED,msg);
-                    return;
-                }
-                
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        //开始连接
+                        try {
+                            //socket = device.createRfcommSocketToServiceRecord(UUID.fromString(MY_UUID));
+                            int sdk = Build.VERSION.SDK_INT;
+                            if (sdk >= 10) {
+                                socket = device.createInsecureRfcommSocketToServiceRecord(UUID.fromString(UUIDStr));
+                            } else {
+                                socket = device.createRfcommSocketToServiceRecord(UUID.fromString(UUIDStr));
+                            }
+                        } catch (IOException e) {
+                            String msg = "创建socket失败";
+                            linkStatusChange(true, ERROR_CONNECTED, msg);
+                            return;
+                        }
+                        
                         try {
                             socket.connect();
                             String msg = "连接成功";
-                            linkStatusChange(false,0,msg);
+                            linkStatusChange(false, 0, msg);
                             checkLink();
                         } catch (IOException e) {
                             //e.printStackTrace();
@@ -299,12 +299,12 @@ public class SPPLinkUtil {
                                 socket.connect();
                                 
                                 String msg = "连接成功";
-                                linkStatusChange(false,0,msg);
+                                linkStatusChange(false, 0, msg);
                                 checkLink();
                             } catch (Exception e2) {
                                 try {
                                     String msg = "连接失败";
-                                    linkStatusChange(true,ERROR_SOCKET_ERROR,msg);
+                                    linkStatusChange(true, ERROR_SOCKET_ERROR, msg);
                                     
                                     if (socket != null) {
                                         socket.close();
@@ -313,7 +313,7 @@ public class SPPLinkUtil {
                                     return;
                                 } catch (IOException ee) {
                                     String msg = "连接失败";
-                                    linkStatusChange(true,ERROR_SOCKET_ERROR,msg);
+                                    linkStatusChange(true, ERROR_SOCKET_ERROR, msg);
                                 }
                             }
                             return;
@@ -323,7 +323,7 @@ public class SPPLinkUtil {
                             is = socket.getInputStream();   //得到蓝牙数据输入流
                         } catch (IOException e) {
                             String msg = "数据接收失败";
-                            linkStatusChange(true,ERROR_SOCKET_ERROR,msg);
+                            linkStatusChange(true, ERROR_SOCKET_ERROR, msg);
                             return;
                         }
                         
@@ -372,11 +372,11 @@ public class SPPLinkUtil {
     
     private void doBreakLink() {
         String msg = "连接中断";
-        linkStatusChange(true,ERROR_BREAK,msg);
+        linkStatusChange(true, ERROR_BREAK, msg);
         close(context);
     }
     
-    private String resultMsgCache = "";
+    private StringBuffer resultMsgCache = new StringBuffer();
     
     //接收数据线程
     Thread readThread = new Thread() {
@@ -390,14 +390,20 @@ public class SPPLinkUtil {
                     if (is != null) {
                         byte[] buffer = new byte[128];
                         int count = is.read(buffer);
-                        resultMsgCache = resultMsgCache + new String(buffer, 0, count, "utf-8");
-                        log(resultMsgCache);
+                        String temp = new String(buffer, 0, count, "utf-8");
+                        if (cleanFlag){
+                            cleanFlag = false;
+                            log("cleanFlag");
+                            resultMsgCache = new StringBuffer();
+                        }
+                        resultMsgCache.append(temp);
+                        log(count + "," + resultMsgCache);
                         if (readEndStr != null) {
-                            if (resultMsgCache.endsWith(readEndStr)) {
+                            if (resultMsgCache.toString().endsWith(readEndStr)) {
                                 btSocketResponse();
                             }
                         } else {
-                            if (resultMsgCache.endsWith("\n") || resultMsgCache.endsWith("\r") || resultMsgCache.endsWith("\r\n") || resultMsgCache.endsWith("\n\r")) {
+                            if (resultMsgCache.toString().endsWith("\n") || resultMsgCache.toString().endsWith("\r") || resultMsgCache.toString().endsWith("\r\n") || resultMsgCache.toString().endsWith("\n\r")) {
                                 btSocketResponse();
                             }
                         }
@@ -409,8 +415,27 @@ public class SPPLinkUtil {
         }
     };
     
-    public void cleanCache() {
-        resultMsgCache = "";
+    private boolean cleanFlag = false;
+    
+    private void btSocketResponse() {
+        if (context != null && context instanceof Activity) {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (btLinkReport != null)
+                        btLinkReport.onGetData(resultMsgCache.toString());
+                    if (onBtSocketResponseListener != null)
+                        onBtSocketResponseListener.onResponse(resultMsgCache.toString());
+                
+                }
+            });
+        } else {
+            if (btLinkReport != null)
+                btLinkReport.onGetData(resultMsgCache.toString());
+            if (onBtSocketResponseListener != null)
+                onBtSocketResponseListener.onResponse(resultMsgCache.toString());
+        }
+        cleanFlag = true;
     }
     
     public void send(String text) {
@@ -418,7 +443,7 @@ public class SPPLinkUtil {
         int n = 0;
         if (socket == null) {
             String msg = "未连接";
-            linkStatusChange(true,ERROR_NOT_CONNECTED,msg);
+            linkStatusChange(true, ERROR_NOT_CONNECTED, msg);
             return;
         }
         try {
@@ -441,7 +466,9 @@ public class SPPLinkUtil {
             }
             
             os.write(bos);
+            log(">>>send:" + text);
         } catch (IOException e) {
+            if (DEBUGMODE) e.printStackTrace();
         }
     }
     
@@ -578,40 +605,17 @@ public class SPPLinkUtil {
         if (DEBUGMODE) Log.e(">>>", "BTLinkUtil:" + msg);
     }
     
-    private void btSocketResponse(){
-        if (context != null && context instanceof Activity) {
-            ((Activity) context).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (btLinkReport != null)
-                        btLinkReport.onGetData(resultMsgCache);
-                    if (onBtSocketResponseListener != null)
-                        onBtSocketResponseListener.onResponse(resultMsgCache);
-                
-                    resultMsgCache = new String();
-                }
-            });
-        } else {
-            if (btLinkReport != null)
-                btLinkReport.onGetData(resultMsgCache + "");
-            if (onBtSocketResponseListener != null)
-                onBtSocketResponseListener.onResponse(resultMsgCache + "");
-        
-            resultMsgCache = new String();
-        }
-    }
-    
-    private void linkStatusChange(final boolean isFailed,final int errorId,final String msg){
+    private void linkStatusChange(final boolean isFailed, final int errorId, final String msg) {
         if (context != null && context instanceof Activity) {
             ((Activity) context).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     loge(msg);
-                    if (isFailed){
+                    if (isFailed) {
                         if (btLinkReport != null) btLinkReport.onError(msg);
                         if (onLinkStatusChangeListener != null)
                             onLinkStatusChangeListener.onFailed(errorId);
-                    }else{
+                    } else {
                         if (btLinkReport != null)
                             btLinkReport.onStatusChange(msg);
                         if (onLinkStatusChangeListener != null)
@@ -621,11 +625,11 @@ public class SPPLinkUtil {
             });
         } else {
             loge(msg);
-            if (isFailed){
+            if (isFailed) {
                 if (btLinkReport != null) btLinkReport.onError(msg);
                 if (onLinkStatusChangeListener != null)
                     onLinkStatusChangeListener.onFailed(errorId);
-            }else{
+            } else {
                 if (btLinkReport != null)
                     btLinkReport.onStatusChange(msg);
                 if (onLinkStatusChangeListener != null)
