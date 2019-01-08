@@ -2,8 +2,6 @@ package com.kongzue.btlinker;
 
 import android.Manifest;
 import android.app.ProgressDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -17,16 +15,16 @@ import com.kongzue.baseframework.BaseActivity;
 import com.kongzue.baseframework.interfaces.Layout;
 import com.kongzue.baseframework.util.JumpParameter;
 import com.kongzue.baseframework.util.OnPermissionResponseListener;
-import com.kongzue.btutil.LinkUtil;
+import com.kongzue.btutil.SPPLinkUtil;
 import com.kongzue.btutil.interfaces.OnBtSocketResponseListener;
 import com.kongzue.btutil.interfaces.OnLinkStatusChangeListener;
 
-import static com.kongzue.btutil.LinkUtil.ERROR_BREAK;
+import static com.kongzue.btutil.SPPLinkUtil.ERROR_BREAK;
 
 @Layout(R.layout.activity_main)
 public class MainActivity extends BaseActivity {
     
-    private LinkUtil linkUtil;
+    private SPPLinkUtil SPPLinkUtil;
     
     private String[] arraysStr = {"\\r\\n", "\\n\\r", "\\n", "\\r"};
     private String[] arrays = {"\r\n", "\n\r", "\n", "\r"};
@@ -78,8 +76,8 @@ public class MainActivity extends BaseActivity {
         
         spEnter.setAdapter(adapter);
         
-        LinkUtil.DEBUGMODE = true;
-        linkUtil = new LinkUtil();
+        SPPLinkUtil.DEBUGMODE = true;
+        SPPLinkUtil = new SPPLinkUtil();
         
     }
     
@@ -111,7 +109,7 @@ public class MainActivity extends BaseActivity {
                     return;
                 }
                 
-                linkUtil.setUUID(uuid)
+                SPPLinkUtil.setUUID(uuid)
                         .setOnLinkStatusChangeListener(new OnLinkStatusChangeListener() {
                             @Override
                             public void onStartLink() {
@@ -149,7 +147,7 @@ public class MainActivity extends BaseActivity {
                             }
                         });
                 
-                linkUtil.link(me, name);
+                SPPLinkUtil.link(me, name);
             }
         });
         
@@ -161,7 +159,7 @@ public class MainActivity extends BaseActivity {
                     toast("请输入指令");
                     return;
                 }
-                linkUtil.send(msg + enterStr);
+                SPPLinkUtil.send(msg + enterStr);
             }
         });
         
@@ -169,7 +167,7 @@ public class MainActivity extends BaseActivity {
     
     @Override
     protected void onDestroy() {
-        linkUtil.close(me);
+        SPPLinkUtil.close(me);
         super.onDestroy();
     }
     

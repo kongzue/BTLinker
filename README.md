@@ -1,11 +1,11 @@
 # BTLinker
-蓝牙连接封装库，适用于智能硬件蓝牙通讯。
+蓝牙连接封装库，适用于智能硬件蓝牙通讯，使用 SPP 服务（稍后会支持BLE）。
 
 <a href="https://github.com/kongzue/BTLinker/">
-<img src="https://img.shields.io/badge/BTLinker-1.0.1-green.svg" alt="Kongzue BTLinker">
+<img src="https://img.shields.io/badge/BTLinker-1.0.2-green.svg" alt="Kongzue BTLinker">
 </a>
-<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.1/link">
-<img src="https://img.shields.io/badge/Maven-1.0.1-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.2/link">
+<img src="https://img.shields.io/badge/Maven-1.0.2-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -27,24 +27,24 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.smart</groupId>
   <artifactId>btutil</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.smart:btutil:1.0.1'
+implementation 'com.kongzue.smart:btutil:1.0.2'
 ```
 
-2) 初始化 LinkUtil
+2) 初始化 SPPLinkUtil
 ```
-private LinkUtil linkUtil;
+private SPPLinkUtil spplinkUtil;
 //...
-linkUtil = new LinkUtil();
+SPPLinkUtil = new SPPLinkUtil();
 
 //UUID 是 SPP 服务的 UUID号，如果使用 HC-06 蓝牙主板则无需修改。
-linkUtil.setUUID(uuid)
+SPPLinkUtil.setUUID(uuid)
 
 //设置状态监听
 .setOnLinkStatusChangeListener(new OnLinkStatusChangeListener() {
@@ -73,26 +73,26 @@ linkUtil.setUUID(uuid)
 });
 
 //开始连接，若 context 是一个 Activity 则回调监听器会自动返回主线程操作。
-linkUtil.link(context, 蓝牙名称);
+spplinkUtil.link(context, 蓝牙名称);
 ```
 
 3) 其他方法
 ```
 //发送消息给设备
-linkUtil.send(String);
+spplinkUtil.send(String);
 
 //别忘记在 Activity 退出后结束事务
 @Override
 protected void onDestroy() {
-    linkUtil.close(me);
+    spplinkUtil.close(me);
     super.onDestroy();
 }
 
 //开启日志打印（请注意大小写）
-LinkUtil.DEBUGMODE = true;
+SPPLinkUtil.DEBUGMODE = true;
 
 //修改配对码（请注意大小写）
-LinkUtil.setBtPairingCode("666666");
+SPPLinkUtil.setBtPairingCode("666666");
 ```
 
 ## 连接错误代码
@@ -129,7 +129,7 @@ Manifest.permission.ACCESS_FINE_LOCATION
 
 回传终止符应当位于硬件设备回传消息的末尾，它用于标记此次指令结束，因传输方式为 socket，鉴于 socket 粘包的特性，若不设置回传终止符则无法确定此次消息结束。
 
-默认的回传接收终止符为“\n”或“\r”或“\r\n”或“\n\r”，也就是说，如果硬件向 App 发送的消息末尾没有换行，则 LinkUtil 不会认为本条消息结束，继续处于等待状态。
+默认的回传接收终止符为“\n”或“\r”或“\r\n”或“\n\r”，也就是说，如果硬件向 App 发送的消息末尾没有换行，则 SPPLinkUtil 不会认为本条消息结束，继续处于等待状态。
 
 只有接收到回传终止符，OnBtSocketResponseListener 中的回调才会有效，将之前缓存的消息传送出来。
 
@@ -151,6 +151,10 @@ limitations under the License.
 ```
 
 ## 更新日志
+v1.0.2：
+- 修改逻辑，并将目前 LinkUtil 改名为 SPPLinkUtil；
+- 修复了一些bug；
+
 v1.0.1：
 - 新增连接后的断开校验；
 - 修改建立连接逻辑，连接更稳定；

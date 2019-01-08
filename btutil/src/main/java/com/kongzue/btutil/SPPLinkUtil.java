@@ -34,7 +34,7 @@ import java.util.UUID;
  * Mail: myzcxhh@live.cn
  * CreateTime: 2018/9/2 16:31
  */
-public class LinkUtil {
+public class SPPLinkUtil {
     
     public static boolean DEBUGMODE = false;                //是否打印日志
     
@@ -42,18 +42,19 @@ public class LinkUtil {
     public static final int ERROR_START_BT = -2;            //无法启动蓝牙
     public static final int ERROR_NOT_FOUND_DEVICE = -3;    //未找到目标设备
     public static final int ERROR_NOT_CONNECTED = -4;       //未建立连接
+    public static final int ERROR_CONNECTED = -5;       //连接失败
     public static final int ERROR_BREAK = -50;              //连接中断
     public static final int ERROR_SOCKET_ERROR = -70;       //Socket故障
     
     private String UUIDStr = "00001101-0000-1000-8000-00805F9B34FB";   //SPP服务UUID号
     private String readEndStr;                              //接收终止符（默认不设置即“\n”或“\r”或“\r\n”或“\n\r”）
     
-    private BluetoothAdapter bluetooth;              //获取本地蓝牙适配器，即蓝牙设备
-    private BluetoothDevice device = null;           //蓝牙设备
-    private BluetoothSocket socket = null;           //蓝牙通信socket
+    private BluetoothAdapter bluetooth;                     //获取本地蓝牙适配器，即蓝牙设备
+    private BluetoothDevice device = null;                  //蓝牙设备
+    private BluetoothSocket socket = null;                  //蓝牙通信socket
     private String btName;
     private static String btPairingCode = "1234";
-    private InputStream is;                          //输入流，用来接收蓝牙数据
+    private InputStream is;                                 //输入流，用来接收蓝牙数据
     private Context context;
     
     private BtLinkReport btLinkReport;
@@ -197,24 +198,8 @@ public class LinkUtil {
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 if (allDevice != null) {
                     if (allDevice.size() == 0) {
-                        if (context != null && context instanceof Activity) {
-                            ((Activity) context).runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    String msg = "附近没有任何可以连接的蓝牙设备";
-                                    loge(msg);
-                                    if (btLinkReport != null) btLinkReport.onError(msg);
-                                    if (onLinkStatusChangeListener != null)
-                                        onLinkStatusChangeListener.onFailed(ERROR_NO_DEVICE);
-                                }
-                            });
-                        } else {
-                            String msg = "附近没有任何可以连接的蓝牙设备";
-                            loge(msg);
-                            if (btLinkReport != null) btLinkReport.onError(msg);
-                            if (onLinkStatusChangeListener != null)
-                                onLinkStatusChangeListener.onFailed(ERROR_NO_DEVICE);
-                        }
+                        String msg = "附近没有任何可以连接的蓝牙设备";
+                        linkStatusChange(true,ERROR_NO_DEVICE,msg);
                         
                         return;
                     } else {
@@ -229,24 +214,8 @@ public class LinkUtil {
                                 }
                             }
                             if (isNotHave) {
-                                if (context != null && context instanceof Activity) {
-                                    ((Activity) context).runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            String msg = "未找到要连接的目标设备";
-                                            loge(msg);
-                                            if (btLinkReport != null) btLinkReport.onError(msg);
-                                            if (onLinkStatusChangeListener != null)
-                                                onLinkStatusChangeListener.onFailed(ERROR_NOT_FOUND_DEVICE);
-                                        }
-                                    });
-                                } else {
-                                    String msg = "未找到要连接的目标设备";
-                                    loge(msg);
-                                    if (btLinkReport != null) btLinkReport.onError(msg);
-                                    if (onLinkStatusChangeListener != null)
-                                        onLinkStatusChangeListener.onFailed(ERROR_NOT_FOUND_DEVICE);
-                                }
+                                String msg = "未找到要连接的目标设备";
+                                linkStatusChange(true,ERROR_NOT_FOUND_DEVICE,msg);
                                 return;
                             }
                         }
@@ -309,24 +278,8 @@ public class LinkUtil {
                         socket = device.createRfcommSocketToServiceRecord(UUID.fromString(UUIDStr));
                     }
                 } catch (IOException e) {
-                    if (context != null && context instanceof Activity) {
-                        ((Activity) context).runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                String msg = "连接失败，ERRORCODE=1";
-                                loge(msg);
-                                if (btLinkReport != null) btLinkReport.onError(msg);
-                                if (onLinkStatusChangeListener != null)
-                                    onLinkStatusChangeListener.onFailed(ERROR_SOCKET_ERROR);
-                            }
-                        });
-                    } else {
-                        String msg = "连接失败，ERRORCODE=1";
-                        loge(msg);
-                        if (btLinkReport != null) btLinkReport.onError(msg);
-                        if (onLinkStatusChangeListener != null)
-                            onLinkStatusChangeListener.onFailed(ERROR_SOCKET_ERROR);
-                    }
+                    String msg = "连接失败";
+                    linkStatusChange(true,ERROR_CONNECTED,msg);
                     return;
                 }
                 
@@ -335,25 +288,8 @@ public class LinkUtil {
                     public void run() {
                         try {
                             socket.connect();
-                            if (context != null && context instanceof Activity) {
-                                ((Activity) context).runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        String msg = "连接成功";
-                                        log(msg);
-                                        if (btLinkReport != null) btLinkReport.onStatusChange(msg);
-                                        if (onLinkStatusChangeListener != null)
-                                            onLinkStatusChangeListener.onSuccess();
-                                    }
-                                });
-                            } else {
-                                String msg = "连接成功";
-                                log(msg);
-                                if (btLinkReport != null) btLinkReport.onStatusChange(msg);
-                                if (onLinkStatusChangeListener != null)
-                                    onLinkStatusChangeListener.onSuccess();
-                            }
-                            
+                            String msg = "连接成功";
+                            linkStatusChange(false,0,msg);
                             checkLink();
                         } catch (IOException e) {
                             //e.printStackTrace();
@@ -361,46 +297,14 @@ public class LinkUtil {
                                 Method m = device.getClass().getMethod("createRfcommSocket", new Class[]{int.class});
                                 socket = (BluetoothSocket) m.invoke(device, 1);
                                 socket.connect();
-    
-                                if (context != null && context instanceof Activity) {
-                                    ((Activity) context).runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            String msg = "连接成功";
-                                            log(msg);
-                                            if (btLinkReport != null) btLinkReport.onStatusChange(msg);
-                                            if (onLinkStatusChangeListener != null)
-                                                onLinkStatusChangeListener.onSuccess();
-                                        }
-                                    });
-                                } else {
-                                    String msg = "连接成功";
-                                    log(msg);
-                                    if (btLinkReport != null) btLinkReport.onStatusChange(msg);
-                                    if (onLinkStatusChangeListener != null)
-                                        onLinkStatusChangeListener.onSuccess();
-                                }
+                                
+                                String msg = "连接成功";
+                                linkStatusChange(false,0,msg);
                                 checkLink();
                             } catch (Exception e2) {
                                 try {
-                                    if (context != null && context instanceof Activity) {
-                                        ((Activity) context).runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                String msg = "连接失败，ERRORCODE=2";
-                                                loge(msg);
-                                                if (btLinkReport != null) btLinkReport.onError(msg);
-                                                if (onLinkStatusChangeListener != null)
-                                                    onLinkStatusChangeListener.onFailed(ERROR_SOCKET_ERROR);
-                                            }
-                                        });
-                                    } else {
-                                        String msg = "连接失败，ERRORCODE=2";
-                                        loge(msg);
-                                        if (btLinkReport != null) btLinkReport.onError(msg);
-                                        if (onLinkStatusChangeListener != null)
-                                            onLinkStatusChangeListener.onFailed(ERROR_SOCKET_ERROR);
-                                    }
+                                    String msg = "连接失败";
+                                    linkStatusChange(true,ERROR_SOCKET_ERROR,msg);
                                     
                                     if (socket != null) {
                                         socket.close();
@@ -408,24 +312,8 @@ public class LinkUtil {
                                     }
                                     return;
                                 } catch (IOException ee) {
-                                    if (context != null && context instanceof Activity) {
-                                        ((Activity) context).runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                String msg = "连接失败，ERRORCODE=3";
-                                                loge(msg);
-                                                if (btLinkReport != null) btLinkReport.onError(msg);
-                                                if (onLinkStatusChangeListener != null)
-                                                    onLinkStatusChangeListener.onFailed(ERROR_SOCKET_ERROR);
-                                            }
-                                        });
-                                    } else {
-                                        String msg = "连接失败，ERRORCODE=4";
-                                        loge(msg);
-                                        if (btLinkReport != null) btLinkReport.onError(msg);
-                                        if (onLinkStatusChangeListener != null)
-                                            onLinkStatusChangeListener.onFailed(ERROR_SOCKET_ERROR);
-                                    }
+                                    String msg = "连接失败";
+                                    linkStatusChange(true,ERROR_SOCKET_ERROR,msg);
                                 }
                             }
                             return;
@@ -434,24 +322,8 @@ public class LinkUtil {
                         try {
                             is = socket.getInputStream();   //得到蓝牙数据输入流
                         } catch (IOException e) {
-                            if (context != null && context instanceof Activity) {
-                                ((Activity) context).runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        String msg = "数据接收失败";
-                                        loge(msg);
-                                        if (btLinkReport != null) btLinkReport.onError(msg);
-                                        if (onLinkStatusChangeListener != null)
-                                            onLinkStatusChangeListener.onFailed(ERROR_SOCKET_ERROR);
-                                    }
-                                });
-                            } else {
-                                String msg = "数据接收失败";
-                                loge(msg);
-                                if (btLinkReport != null) btLinkReport.onError(msg);
-                                if (onLinkStatusChangeListener != null)
-                                    onLinkStatusChangeListener.onFailed(ERROR_SOCKET_ERROR);
-                            }
+                            String msg = "数据接收失败";
+                            linkStatusChange(true,ERROR_SOCKET_ERROR,msg);
                             return;
                         }
                         
@@ -499,24 +371,8 @@ public class LinkUtil {
     }
     
     private void doBreakLink() {
-        if (context != null && context instanceof Activity) {
-            ((Activity) context).runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    String msg = "连接中断";
-                    loge(msg);
-                    if (btLinkReport != null) btLinkReport.onError(msg);
-                    if (onLinkStatusChangeListener != null)
-                        onLinkStatusChangeListener.onFailed(ERROR_BREAK);
-                }
-            });
-        } else {
-            String msg = "连接中断";
-            loge(msg);
-            if (btLinkReport != null) btLinkReport.onError(msg);
-            if (onLinkStatusChangeListener != null)
-                onLinkStatusChangeListener.onFailed(ERROR_BREAK);
-        }
+        String msg = "连接中断";
+        linkStatusChange(true,ERROR_BREAK,msg);
         close(context);
     }
     
@@ -528,65 +384,21 @@ public class LinkUtil {
         public void run() {
             try {
                 while (true) {
-                    if (!alreadyThread)//跳出循环
+                    if (!alreadyThread)
                         return;
                     
                     if (is != null) {
-                        // 创建一个128字节的缓冲
                         byte[] buffer = new byte[128];
-                        // 每次读取128字节，并保存其读取的角标
                         int count = is.read(buffer);
-                        // 创建Message类，向handler发送数据
                         resultMsgCache = resultMsgCache + new String(buffer, 0, count, "utf-8");
+                        log(resultMsgCache);
                         if (readEndStr != null) {
                             if (resultMsgCache.endsWith(readEndStr)) {
-                                if (context != null && context instanceof Activity) {
-                                    ((Activity) context).runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if (btLinkReport != null)
-                                                btLinkReport.onGetData(resultMsgCache);
-                                            if (onBtSocketResponseListener != null)
-                                                onBtSocketResponseListener.onResponse(resultMsgCache);
-                                            
-                                            resultMsgCache = new String();
-                                        }
-                                    });
-                                } else {
-                                    if (btLinkReport != null)
-                                        btLinkReport.onGetData(resultMsgCache + "");
-                                    if (onBtSocketResponseListener != null)
-                                        onBtSocketResponseListener.onResponse(resultMsgCache + "");
-                                    
-                                    resultMsgCache = new String();
-                                }
+                                btSocketResponse();
                             }
                         } else {
                             if (resultMsgCache.endsWith("\n") || resultMsgCache.endsWith("\r") || resultMsgCache.endsWith("\r\n") || resultMsgCache.endsWith("\n\r")) {
-                                if (context != null && context instanceof Activity) {
-                                    ((Activity) context).runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if (!resultMsgCache.trim().isEmpty()){
-                                                if (btLinkReport != null)
-                                                    btLinkReport.onGetData(resultMsgCache);
-                                                if (onBtSocketResponseListener != null)
-                                                    onBtSocketResponseListener.onResponse(resultMsgCache);
-                                            }
-                                            
-                                            resultMsgCache = new String();
-                                        }
-                                    });
-                                } else {
-                                    if (!resultMsgCache.trim().isEmpty()) {
-                                        if (btLinkReport != null)
-                                            btLinkReport.onGetData(resultMsgCache + "");
-                                        if (onBtSocketResponseListener != null)
-                                            onBtSocketResponseListener.onResponse(resultMsgCache + "");
-                                    }
-                                    
-                                    resultMsgCache = new String();
-                                }
+                                btSocketResponse();
                             }
                         }
                     }
@@ -605,24 +417,8 @@ public class LinkUtil {
         int i = 0;
         int n = 0;
         if (socket == null) {
-            if (context != null && context instanceof Activity) {
-                ((Activity) context).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String msg = "未连接";
-                        loge(msg);
-                        if (btLinkReport != null) btLinkReport.onError(msg);
-                        if (onLinkStatusChangeListener != null)
-                            onLinkStatusChangeListener.onFailed(ERROR_NOT_CONNECTED);
-                    }
-                });
-            } else {
-                String msg = "未连接";
-                loge(msg);
-                if (btLinkReport != null) btLinkReport.onError(msg);
-                if (onLinkStatusChangeListener != null)
-                    onLinkStatusChangeListener.onFailed(ERROR_NOT_CONNECTED);
-            }
+            String msg = "未连接";
+            linkStatusChange(true,ERROR_NOT_CONNECTED,msg);
             return;
         }
         try {
@@ -664,33 +460,33 @@ public class LinkUtil {
         return true;
     }
     
-    public LinkUtil setBtLinkReport(BtLinkReport btLinkReport) {
+    public SPPLinkUtil setBtLinkReport(BtLinkReport btLinkReport) {
         this.btLinkReport = btLinkReport;
         return this;
     }
     
-    public LinkUtil setOnLinkStatusChangeListener(OnLinkStatusChangeListener onLinkStatusChangeListener) {
+    public SPPLinkUtil setOnLinkStatusChangeListener(OnLinkStatusChangeListener onLinkStatusChangeListener) {
         this.onLinkStatusChangeListener = onLinkStatusChangeListener;
         return this;
     }
     
-    public LinkUtil setOnBtSocketResponseListener(OnBtSocketResponseListener onBtSocketResponseListener) {
+    public SPPLinkUtil setOnBtSocketResponseListener(OnBtSocketResponseListener onBtSocketResponseListener) {
         this.onBtSocketResponseListener = onBtSocketResponseListener;
         return this;
     }
     
-    public LinkUtil setUUID(String UUID) {
+    public SPPLinkUtil setUUID(String UUID) {
         this.UUIDStr = UUID;
         return this;
     }
     
-    public LinkUtil setReadEndStr(String readEndStr) {
+    public SPPLinkUtil setReadEndStr(String readEndStr) {
         this.readEndStr = readEndStr;
         return this;
     }
     
     public static void setBtPairingCode(String btPairingCode) {
-        LinkUtil.btPairingCode = btPairingCode;
+        SPPLinkUtil.btPairingCode = btPairingCode;
     }
     
     public void close(Context context) {
@@ -753,7 +549,6 @@ public class LinkUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        context = null;
     }
     
     public static boolean setPin(Class<? extends BluetoothDevice> btClass, BluetoothDevice btDevice) throws Exception {
@@ -781,5 +576,61 @@ public class LinkUtil {
     
     private static void loge(String msg) {
         if (DEBUGMODE) Log.e(">>>", "BTLinkUtil:" + msg);
+    }
+    
+    private void btSocketResponse(){
+        if (context != null && context instanceof Activity) {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (btLinkReport != null)
+                        btLinkReport.onGetData(resultMsgCache);
+                    if (onBtSocketResponseListener != null)
+                        onBtSocketResponseListener.onResponse(resultMsgCache);
+                
+                    resultMsgCache = new String();
+                }
+            });
+        } else {
+            if (btLinkReport != null)
+                btLinkReport.onGetData(resultMsgCache + "");
+            if (onBtSocketResponseListener != null)
+                onBtSocketResponseListener.onResponse(resultMsgCache + "");
+        
+            resultMsgCache = new String();
+        }
+    }
+    
+    private void linkStatusChange(final boolean isFailed,final int errorId,final String msg){
+        if (context != null && context instanceof Activity) {
+            ((Activity) context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    loge(msg);
+                    if (isFailed){
+                        if (btLinkReport != null) btLinkReport.onError(msg);
+                        if (onLinkStatusChangeListener != null)
+                            onLinkStatusChangeListener.onFailed(errorId);
+                    }else{
+                        if (btLinkReport != null)
+                            btLinkReport.onStatusChange(msg);
+                        if (onLinkStatusChangeListener != null)
+                            onLinkStatusChangeListener.onSuccess();
+                    }
+                }
+            });
+        } else {
+            loge(msg);
+            if (isFailed){
+                if (btLinkReport != null) btLinkReport.onError(msg);
+                if (onLinkStatusChangeListener != null)
+                    onLinkStatusChangeListener.onFailed(errorId);
+            }else{
+                if (btLinkReport != null)
+                    btLinkReport.onStatusChange(msg);
+                if (onLinkStatusChangeListener != null)
+                    onLinkStatusChangeListener.onSuccess();
+            }
+        }
     }
 }

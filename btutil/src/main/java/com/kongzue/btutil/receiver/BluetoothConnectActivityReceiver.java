@@ -5,7 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.kongzue.btutil.LinkUtil;
+import com.kongzue.btutil.SPPLinkUtil;
 
 /**
  * Author: @Kongzue
@@ -25,7 +25,7 @@ public class BluetoothConnectActivityReceiver extends BroadcastReceiver {
                 //ClsUtils.setPairingConfirmation(mBluetoothDevice.getClass(), mBluetoothDevice, true);
                 abortBroadcast();//如果没有将广播终止，则会出现一个一闪而过的配对框。
                 //3.调用setPin方法进行配对...
-                boolean ret = LinkUtil.setPin(mBluetoothDevice.getClass(), mBluetoothDevice);
+                boolean ret = SPPLinkUtil.setPin(mBluetoothDevice.getClass(), mBluetoothDevice);
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -8,9 +8,9 @@ package com.kongzue.btutil.interfaces;
  * CreateTime: 2018/9/2 16:44
  */
 public interface BtLinkReport {
-    public void onStatusChange(String message);
+    void onStatusChange(String message);
     
-    public void onError(String message);
+    void onError(String message);
     
-    public void onGetData(String datas);
+    void onGetData(String datas);
 }
