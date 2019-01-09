@@ -1,6 +1,8 @@
 package com.kongzue.btutil.interfaces;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.widget.ListView;
 
 import java.util.List;
 
@@ -12,5 +14,7 @@ import java.util.List;
  * CreateTime: 2019/1/8 21:38
  */
 public interface OnBLEScanListener {
-    void onScan(List<BluetoothDevice> deviceList);
+    BluetoothDevice onFindDevice(BluetoothDevice device);
+    
+    void getAllDevice(List<BluetoothDevice> devices);
 }
