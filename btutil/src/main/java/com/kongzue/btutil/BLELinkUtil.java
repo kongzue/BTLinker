@@ -23,6 +23,7 @@ import com.kongzue.btutil.interfaces.OnBLEWriteListener;
 import com.kongzue.btutil.util.TaskExecutor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,35 +37,35 @@ import java.util.UUID;
  * CreateTime: 2019/1/8 17:42
  */
 public class BLELinkUtil {
-    
+
     public static boolean DEBUGMODE = false;                //是否打印日志
-    
+
     private boolean isScanning = false;
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter btAdapter;
     private Context context;
     private OnBLEScanListener onBLEScanListener;                            //查找设备回调
     private OnBLEFindServiceListener onBLEFindServiceListener;              //查询服务回调
-    
+
     private BluetoothGatt bluetoothGatt;                                    //要连接的设备
     private List<BluetoothDevice> deviceList = new ArrayList<>();           //查询到的所有设备
-    
+
     //开始
     public void start(Context c) {
         this.context = c;
-        
+
         if (!openBt(c)) {
             //启动蓝牙失败
-            
+
         } else {
             //启动蓝牙成功
             doCheckBtOpened(c);
         }
     }
-    
+
     private Timer linkTimer;
     private BluetoothAdapter bluetooth;                     //获取本地蓝牙适配器，即蓝牙设备
-    
+
     private void doCheckBtOpened(Context c) {
         if (!c.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             loge("不支持BLE");
@@ -83,14 +84,14 @@ public class BLELinkUtil {
             }
         }, 1000, 1000);
     }
-    
+
     private void doScan(Context c) {
         bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         btAdapter = bluetoothManager.getAdapter();
-        
+
         isScanning = true;
         btAdapter.startLeScan(leScanCallback);
-        
+
         Looper.prepare();
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -100,20 +101,20 @@ public class BLELinkUtil {
             }
         }, 10 * 1000);
     }
-    
+
     //连接指定设备
     public void linkDevice(BluetoothDevice bluetoothDevice, OnBLEFindServiceListener listener) {
         onBLEFindServiceListener = listener;
         stopScan();
         bluetoothGatt = bluetoothDevice.connectGatt(context, true, bluetoothGattCallback);
     }
-    
+
     private boolean openBt(Context context) {
         bluetooth = BluetoothAdapter.getDefaultAdapter();    //获取本地蓝牙适配器，即蓝牙设备
         if (bluetooth == null) {
             //无法打开蓝牙
             loge("无法打开蓝牙");
-            
+
             return false;
         }
         //启动蓝牙
@@ -122,7 +123,7 @@ public class BLELinkUtil {
         }
         return true;
     }
-    
+
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
@@ -133,14 +134,14 @@ public class BLELinkUtil {
             BluetoothDevice linkDevice = onBLEScanListener.onFindDevice(device);
             if (linkDevice != null) {
                 linkDevice(linkDevice, null);
-                
+
                 isScanning = false;
                 btAdapter.stopLeScan(leScanCallback);
             }
             onBLEScanListener.getAllDevice(deviceList);
         }
     };
-    
+
     private BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {     //连接状态改变的回调
@@ -151,7 +152,7 @@ public class BLELinkUtil {
                 log("断开连接");
             }
         }
-        
+
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {                      //发现服务的回调
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -165,9 +166,9 @@ public class BLELinkUtil {
                         List<BluetoothGattCharacteristic> listGattCharacteristic = supportedGattServices.get(i).getCharacteristics();
                         for (int j = 0; j < listGattCharacteristic.size(); j++) {
                             BluetoothGattCharacteristic gattCharacteristic = listGattCharacteristic.get(j);
-                            
+
                             log("   成员UUID：" + listGattCharacteristic.get(j).getUuid() + "    " +
-                                        getPorperties(context, gattCharacteristic)
+                                    getPorperties(context, gattCharacteristic)
                             );
                         }
                     }
@@ -177,7 +178,7 @@ public class BLELinkUtil {
                 if (onBLEFindServiceListener != null) onBLEFindServiceListener.onLink(false, null);
             }
         }
-        
+
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {      //读操作的回调
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -194,7 +195,7 @@ public class BLELinkUtil {
                 }
             }
         }
-        
+
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {     //写操作的回调
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -204,49 +205,49 @@ public class BLELinkUtil {
                 if (onBLEWriteListenerl != null) onBLEWriteListenerl.onWrite(false);
             }
         }
-        
+
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {               //数据返回的回调
             super.onCharacteristicChanged(gatt, characteristic);
             try {
-                String data = new String(characteristic.getValue(), "UTF-8");
+                String data = Arrays.toString(characteristic.getValue()); //new String(characteristic.getValue(), "UTF-8");
                 if (onBLENotificationListener != null) onBLENotificationListener.onGetData(data);
             } catch (Exception e) {
-            
+
             }
-            
+
         }
     };
-    
+
     public BLELinkUtil setOnBLEScanListener(OnBLEScanListener onBLEScanListener) {
         this.onBLEScanListener = onBLEScanListener;
         return this;
     }
-    
+
     //停止搜寻
     public void stopScan() {
         isScanning = false;
         if (btAdapter != null) btAdapter.stopLeScan(leScanCallback);
     }
-    
-    
+
+
     private UUID serviceUUID;
     private UUID characteristicUUID;
-    
+
     public void setUUID(UUID s, UUID c) {
         serviceUUID = s;
         characteristicUUID = c;
     }
-    
+
     public void setUUID(String serviceUUIDStr, String characteristicUUIDStr) {
         serviceUUID = UUID.fromString(serviceUUIDStr);
         characteristicUUID = UUID.fromString(characteristicUUIDStr);
     }
-    
+
     private OnBLEReadListener onBLEReadListener;
     private OnBLEWriteListener onBLEWriteListenerl;
     private OnBLENotificationListener onBLENotificationListener;
-    
+
     //读取值
     public void read(String serviceUUID, String characteristicUUID, OnBLEReadListener onBLEReadListener) {
         if (bluetoothGatt == null) {
@@ -260,7 +261,7 @@ public class BLELinkUtil {
             bluetoothGatt.readCharacteristic(characteristic);
         }
     }
-    
+
     public void read(OnBLEReadListener onBLEReadListener) {
         if (bluetoothGatt == null) {
             loge("未连接到设备，请先查找设备并使用linkDevice(...)方法连接设备");
@@ -277,7 +278,7 @@ public class BLELinkUtil {
             bluetoothGatt.readCharacteristic(characteristic);
         }
     }
-    
+
     //写入值
     public boolean write(String serviceUUID, String characteristicUUID, byte[] value, OnBLEWriteListener listener) {
         if (bluetoothGatt == null) {
@@ -285,7 +286,7 @@ public class BLELinkUtil {
             return false;
         }
         BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(serviceUUID));
-        
+
         if (service != null) {
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
             if (listener != null) this.onBLEWriteListenerl = listener;
@@ -297,11 +298,11 @@ public class BLELinkUtil {
             return false;
         }
     }
-    
+
     public boolean write(String serviceUUID, String characteristicUUID, String value, OnBLEWriteListener listener) {
         return write(serviceUUID, characteristicUUID, value.getBytes(), listener);
     }
-    
+
     public boolean write(byte[] value, OnBLEWriteListener listener) {
         if (bluetoothGatt == null) {
             loge("未连接到设备，请先查找设备并使用linkDevice(...)方法连接设备");
@@ -323,11 +324,11 @@ public class BLELinkUtil {
             return false;
         }
     }
-    
+
     public boolean write(String value, OnBLEWriteListener listener) {
         return write(value.getBytes(), listener);
     }
-    
+
     //写入大数据包
     public void writeBIG(final String serviceUUID, final String characteristicUUID, final byte[] value, final OnBLEWriteListener listener) {
         if (bluetoothGatt == null) {
@@ -366,11 +367,11 @@ public class BLELinkUtil {
             }
         });
     }
-    
+
     public void writeBIG(String serviceUUID, String characteristicUUID, String value, final OnBLEWriteListener listener) {
         writeBIG(serviceUUID, characteristicUUID, value.getBytes(), listener);
     }
-    
+
     public void writeBIG(final byte[] value, final OnBLEWriteListener listener) {
         if (bluetoothGatt == null) {
             loge("未连接到设备，请先查找设备并使用linkDevice(...)方法连接设备");
@@ -412,16 +413,35 @@ public class BLELinkUtil {
             }
         });
     }
-    
+
     public void writeBIG(String value, OnBLEWriteListener listener) {
         writeBIG(value.getBytes(), listener);
     }
-    
-    public boolean startGetNotification(String descriptorUUID, OnBLENotificationListener onBLENotificationListener) {
+
+    public boolean startGetNotification(String descriptorUUID, OnBLENotificationListener listener) {
         BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
         if (service != null) {
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicUUID);
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(descriptorUUID));
+            if (descriptor != null) {
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                bluetoothGatt.writeDescriptor(descriptor);
+            }
+            this.onBLENotificationListener = listener;
+            return bluetoothGatt.setCharacteristicNotification(characteristic, true);
+        } else {
+            return false;
+        }
+    }
+
+    public static final String CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
+
+    public boolean startGetNotification(OnBLENotificationListener listener) {
+        this.onBLENotificationListener = listener;
+        BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
+        if (service != null) {
+            BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicUUID);
+            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(CLIENT_CHARACTERISTIC_CONFIG));
             if (descriptor != null) {
                 descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                 bluetoothGatt.writeDescriptor(descriptor);
@@ -431,14 +451,14 @@ public class BLELinkUtil {
             return false;
         }
     }
-    
+
     public BluetoothGattCharacteristic getCharacteristic(String serviceUUID, String characteristicUUID) {
         if (bluetoothGatt == null) {
             loge("未连接到设备，请先查找设备并使用linkDevice(...)方法连接设备");
             return null;
         }
         BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(serviceUUID));
-        
+
         if (service != null) {
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
             return characteristic;
@@ -446,32 +466,32 @@ public class BLELinkUtil {
             return null;
         }
     }
-    
+
     public List<BluetoothDevice> getDeviceList() {
         return deviceList;
     }
-    
+
     public boolean isScanning() {
         return isScanning;
     }
-    
+
     public BLELinkUtil setOnBLEFindServiceListener(OnBLEFindServiceListener onBLEFindServiceListener) {
         this.onBLEFindServiceListener = onBLEFindServiceListener;
         return this;
     }
-    
+
     private void log(String msg) {
         if (DEBUGMODE) Log.i(">>>", "BTLinkUtil:" + msg);
     }
-    
+
     private static void loge(String msg) {
         if (DEBUGMODE) Log.e(">>>", "BTLinkUtil:" + msg);
     }
-    
+
     public String getPorperties(Context context, BluetoothGattCharacteristic item) {
         String proprties;
         String read = null, write = null, notify = null;
-        
+
         if (getGattCharacteristicsPropertices(item.getProperties(), BluetoothGattCharacteristic.PROPERTY_READ)) {
             read = "可读";
         }
@@ -485,7 +505,7 @@ public class BLELinkUtil {
         if (getGattCharacteristicsPropertices(item.getProperties(), BluetoothGattCharacteristic.PROPERTY_INDICATE)) {
             notify = "指示器";
         }
-        
+
         if (read != null) {
             proprties = read;
             if (write != null) {
@@ -497,7 +517,7 @@ public class BLELinkUtil {
         } else {
             if (write != null) {
                 proprties = write;
-                
+
                 if (notify != null) {
                     proprties = proprties + "    " + notify;
                 }
@@ -505,30 +525,30 @@ public class BLELinkUtil {
                 proprties = notify;
             }
         }
-        
+
         return proprties;
     }
-    
+
     private boolean getGattCharacteristicsPropertices(int characteristics, int characteristicsSearch) {
         if ((characteristics & characteristicsSearch) == characteristicsSearch) {
             return true;
         }
         return false;
     }
-    
+
     //判断特征可读
-    public boolean ifCharacteristicReadable(BluetoothGattCharacteristic characteristic){
+    public boolean ifCharacteristicReadable(BluetoothGattCharacteristic characteristic) {
         return ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) > 0);
     }
-    
+
     //判断特征可写
-    public boolean ifCharacteristicWritable(BluetoothGattCharacteristic characteristic){
+    public boolean ifCharacteristicWritable(BluetoothGattCharacteristic characteristic) {
         return ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0 ||
                 (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) > 0);
     }
-    
+
     //判断特征是否具备通知属性
-    public boolean ifCharacteristicNotifiable (BluetoothGattCharacteristic characteristic){
+    public boolean ifCharacteristicNotifiable(BluetoothGattCharacteristic characteristic) {
         return ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0 ||
                 (characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0);
     }

@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.kongzue.btutil.BLELinkUtil;
 import com.kongzue.btutil.interfaces.OnBLEFindServiceListener;
+import com.kongzue.btutil.interfaces.OnBLENotificationListener;
 import com.kongzue.btutil.interfaces.OnBLEReadListener;
 import com.kongzue.btutil.interfaces.OnBLEScanListener;
 import com.kongzue.btutil.interfaces.OnBLEWriteListener;
@@ -31,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 public class BLEActivity extends AppCompatActivity {
-    
+
     private LinearLayout boxDevice;
     private Button btnLink;
     private ListView listDevice;
@@ -43,11 +44,12 @@ public class BLEActivity extends AppCompatActivity {
     private TextView txtChildUUID;
     private Button btnSelect;
     private Button btnRead;
+    private Button btnNotify;
     private TextView txtRead;
     private LinearLayout boxWrite;
     private EditText editWrite;
     private Button btnWrite;
-    
+
     private ProgressDialog progressDialog;
     
     private BLELinkUtil bleLinkUtil;
@@ -65,22 +67,23 @@ public class BLEActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ble);
         
         me = this;
-    
-        boxDevice = findViewById(R.id.box_device);
-        btnLink = findViewById(R.id.btn_link);
-        listDevice = findViewById(R.id.list_device);
-        boxService = findViewById(R.id.box_service);
-        listService = findViewById(R.id.list_service);
-        boxLinked = findViewById(R.id.box_linked);
-        txtName = findViewById(R.id.txt_name);
-        txtServiceUUID = findViewById(R.id.txt_serviceUUID);
-        txtChildUUID = findViewById(R.id.txt_childUUID);
-        btnSelect = findViewById(R.id.btn_select);
-        btnRead = findViewById(R.id.btn_read);
-        txtRead = findViewById(R.id.txt_read);
-        boxWrite = findViewById(R.id.box_write);
-        editWrite = findViewById(R.id.edit_write);
-        btnWrite = findViewById(R.id.btn_write);
+
+        boxDevice = (LinearLayout) findViewById(R.id.box_device);
+        btnLink = (Button) findViewById(R.id.btn_link);
+        listDevice = (ListView) findViewById(R.id.list_device);
+        boxService = (LinearLayout) findViewById(R.id.box_service);
+        listService = (ListView) findViewById(R.id.list_service);
+        boxLinked = (LinearLayout) findViewById(R.id.box_linked);
+        txtName = (TextView) findViewById(R.id.txt_name);
+        txtServiceUUID = (TextView) findViewById(R.id.txt_serviceUUID);
+        txtChildUUID = (TextView) findViewById(R.id.txt_childUUID);
+        btnSelect = (Button) findViewById(R.id.btn_select);
+        btnRead = (Button) findViewById(R.id.btn_read);
+        btnNotify = (Button) findViewById(R.id.btn_notify);
+        txtRead = (TextView) findViewById(R.id.txt_read);
+        boxWrite = (LinearLayout) findViewById(R.id.box_write);
+        editWrite = (EditText) findViewById(R.id.edit_write);
+        btnWrite = (Button) findViewById(R.id.btn_write);
         
         BLELinkUtil.DEBUGMODE = true;
         
@@ -229,6 +232,18 @@ public class BLEActivity extends AppCompatActivity {
                         }
                     });
                 }
+            }
+        });
+
+        btnNotify.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                bleLinkUtil.startGetNotification(new OnBLENotificationListener() {
+                    @Override
+                    public void onGetData(String data) {
+                        txtRead.setText(data);
+                    }
+                });
             }
         });
     }
