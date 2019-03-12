@@ -118,6 +118,12 @@
                         android:layout_height="wrap_content"
                         android:text="读取"/>
 
+                    <Button
+                        android:id="@+id/btn_notify"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="通知"/>
+
                 </LinearLayout>
 
                 <TextView
