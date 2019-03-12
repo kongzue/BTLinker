@@ -42,7 +42,7 @@ public class SPPLinkUtil {
     public static final int ERROR_START_BT = -2;            //无法启动蓝牙
     public static final int ERROR_NOT_FOUND_DEVICE = -3;    //未找到目标设备
     public static final int ERROR_NOT_CONNECTED = -4;       //未建立连接
-    public static final int ERROR_CONNECTED = -5;       //连接失败
+    public static final int ERROR_CONNECTED = -5;           //连接失败
     public static final int ERROR_BREAK = -50;              //连接中断
     public static final int ERROR_SOCKET_ERROR = -70;       //Socket故障
     

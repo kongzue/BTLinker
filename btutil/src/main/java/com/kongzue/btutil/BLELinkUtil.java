@@ -290,7 +290,7 @@ public class BLELinkUtil {
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(UUID.fromString(characteristicUUID));
             if (listener != null) this.onBLEWriteListenerl = listener;
             characteristic.setValue(value);//new byte[] {0x7e, 0x14, 0x00, 0x00,0x00,(byte) 0xaa}
-            //characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+            characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
             return bluetoothGatt.writeCharacteristic(characteristic);
         } else {
             listener.onWrite(false);
@@ -316,7 +316,7 @@ public class BLELinkUtil {
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicUUID);
             if (listener != null) this.onBLEWriteListenerl = listener;
             characteristic.setValue(value);//new byte[] {0x7e, 0x14, 0x00, 0x00,0x00,(byte) 0xaa}
-            //characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+            characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
             return bluetoothGatt.writeCharacteristic(characteristic);
         } else {
             listener.onWrite(false);
