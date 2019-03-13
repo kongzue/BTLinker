@@ -210,6 +210,7 @@ public class BLEActivity extends AppCompatActivity {
                 bleLinkUtil.read(new OnBLEReadListener() {
                     @Override
                     public void onReadMessage(String msg) {
+                        Log.i(">>>", "onReadMessage: "+msg);
                         txtRead.setText(msg);
                     }
                 });
@@ -241,7 +242,8 @@ public class BLEActivity extends AppCompatActivity {
                 bleLinkUtil.startGetNotification(new OnBLENotificationListener() {
                     @Override
                     public void onGetData(String data) {
-                        txtRead.setText(data);
+                        Log.i(">>>", "onReadMessage: "+data);
+                        txtRead.setText(txtRead.getText().toString()+"\n"+data);
                     }
                 });
             }

@@ -126,12 +126,6 @@
 
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/txt_read"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="--"/>
-
                 <LinearLayout
                     android:id="@+id/box_write"
                     android:layout_width="match_parent"
@@ -151,6 +145,14 @@
                         android:text="写入"/>
 
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txt_read"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:background="#0D000000"
+                    android:scrollbars="vertical"
+                    android:text="--"/>
 
             </LinearLayout>
 

@@ -1,5 +1,6 @@
 package com.kongzue.btutil;
 
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -11,6 +12,7 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -23,7 +25,6 @@ import com.kongzue.btutil.interfaces.OnBLEWriteListener;
 import com.kongzue.btutil.util.TaskExecutor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -143,6 +144,12 @@ public class BLELinkUtil {
     };
 
     private BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
+
+        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+        public void onMtuChanged(android.bluetooth.BluetoothGatt gatt, int mtu, int status){
+            Log.d("BLE","onMtuChanged mtu="+mtu+",status="+status);
+        }
+
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {     //连接状态改变的回调
             if (newState == BluetoothProfile.STATE_CONNECTED) {
@@ -172,6 +179,11 @@ public class BLELinkUtil {
                             );
                         }
                     }
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    boolean result = bluetoothGatt.requestMtu(512);
+                    log("这是长度512："+result);
                 }
             } else {
                 loge("发现服务失败：status=" + status);
@@ -210,8 +222,14 @@ public class BLELinkUtil {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {               //数据返回的回调
             super.onCharacteristicChanged(gatt, characteristic);
             try {
-                String data = Arrays.toString(characteristic.getValue()); //new String(characteristic.getValue(), "UTF-8");
-                if (onBLENotificationListener != null) onBLENotificationListener.onGetData(data);
+                //log("value="+characteristic.getValue());
+                //log("StringValue="+new String(characteristic.getValue(), "UTF-8"))
+                //boolean readCharacteristic = bluetoothGatt.readCharacteristic(characteristic);
+
+                //log("readCharacteristic:"+readCharacteristic);
+
+                String d1 = new String(characteristic.getValue(), "UTF-8");
+                if (onBLENotificationListener != null) onBLENotificationListener.onGetData(d1);
             } catch (Exception e) {
 
             }
@@ -420,6 +438,15 @@ public class BLELinkUtil {
 
     public boolean startGetNotification(String descriptorUUID, OnBLENotificationListener listener) {
         BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
+
+
+
+
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            boolean result = bluetoothGatt.requestMtu(512);
+//            log("这是长度512："+result);
+//        }
+
         if (service != null) {
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicUUID);
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString(descriptorUUID));
@@ -438,6 +465,14 @@ public class BLELinkUtil {
 
     public boolean startGetNotification(OnBLENotificationListener listener) {
         this.onBLENotificationListener = listener;
+
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            boolean result = bluetoothGatt.requestMtu(512);
+//            log("这是长度512："+result);
+//        }
+
+
         BluetoothGattService service = bluetoothGatt.getService(serviceUUID);
         if (service != null) {
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicUUID);
