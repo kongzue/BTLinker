@@ -51,7 +51,7 @@ public class BLELinkUtil {
     private BluetoothGatt bluetoothGatt;                                    //要连接的设备
     private List<BluetoothDevice> deviceList = new ArrayList<>();           //查询到的所有设备
 
-    //开始
+    //开始搜寻设备
     public void start(Context c) {
         this.context = c;
 
@@ -105,7 +105,7 @@ public class BLELinkUtil {
 
     //连接指定设备
     public void linkDevice(BluetoothDevice bluetoothDevice, OnBLEFindServiceListener listener) {
-        onBLEFindServiceListener = listener;
+        if (listener!=null)onBLEFindServiceListener = listener;
         stopScan();
         bluetoothGatt = bluetoothDevice.connectGatt(context, true, bluetoothGattCallback);
     }

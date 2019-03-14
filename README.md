@@ -2,10 +2,10 @@
 蓝牙连接封装库，适用于智能硬件蓝牙通讯，使用 SPP 服务（稍后会支持BLE）。
 
 <a href="https://github.com/kongzue/BTLinker/">
-<img src="https://img.shields.io/badge/BTLinker-1.0.3-green.svg" alt="Kongzue BTLinker">
+<img src="https://img.shields.io/badge/BTLinker-1.0.5-green.svg" alt="Kongzue BTLinker">
 </a>
-<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.3/link">
-<img src="https://img.shields.io/badge/Maven-1.0.3-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.5/link">
+<img src="https://img.shields.io/badge/Maven-1.0.5-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -22,30 +22,63 @@ Demo下载：https://fir.im/BTLinker
 
 ## ⚠前言
 
-目前仅支持 SPP 服务模式，BLE 模式正在开发中。
+目前已支持 SPP 和 BLE 模式，对应使用 SPPLinkUtil 和 BLELinkUtil 工具类。
 
-请注意，因蓝牙 Socket 存在天坑，数据包可能发生粘包情况，请您与硬件端约定一个消息结束符（默认为各种回车符） 为结尾，来代表此条消息结束，否则软件层面上无法得知消息结束会继续等待后续的消息导致无法通过监听器吐出任何数据。
+本框架无需做太多复杂操作，开关蓝牙也都是自动的，您只需要连接需要的设备，进行相关的操作即可。
 
-请注意，因蓝牙 Socket 存在天坑，偶尔发送数据包会存在丢包的风险导致硬件端未接受到指令，建议发送指令后服务端返回个约定的执行成功指令给客户端，若没有建议客户端重复发送之前的指令直到成功。
+使用本框架需要一定的蓝牙结构知识，对于 SPP 和 BLE 通讯的结构组成，本文不再赘述，要了解请自信搜索资料。
 
-### 使用方法
+### 关于蓝牙2.0（SPP）的一些说明
+
+因蓝牙 Socket 存在天坑，数据包可能发生粘包情况，请您与硬件端约定一个消息结束符（默认为各种回车符） 为结尾（默认\r\n），来代表此条消息结束，否则软件层面上无法得知消息结束会继续等待后续的消息导致无法通过监听器吐出任何数据。
+
+偶尔发送数据包会存在丢包的风险导致硬件端未接受到指令，建议发送指令后服务端返回个约定的执行成功指令给客户端，若没有建议客户端重复发送之前的指令直到成功。
+
+### 关于蓝牙4.0（BLE）的一些说明
+
+由于 Android 底层限制，默认发送、接收的消息内容都被限制在20字节以内，导致收发消息出现断断续续或只有前20字的情况，本框架会在完成通道连接后发送最大512字节的数据包申请，若无效，请与硬件开发联系支持更大的数据包。
+
+要发送20字以上数据请使用 writeBIG(...) 方法，该方法的实现原理是将要发送的数据裁剪为多个20字节的数据包，每隔50毫秒发送一次，请与硬件端商量进行数据组包。
+
+## 使用方法
 1) 从 Maven 仓库或 jCenter 引入：
 Maven仓库：
 ```
 <dependency>
   <groupId>com.kongzue.smart</groupId>
   <artifactId>btutil</artifactId>
-  <version>1.0.3</version>
+  <version>1.0.5</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.smart:btutil:1.0.3'
+implementation 'com.kongzue.smart:btutil:1.0.5'
 ```
 
-2) 初始化 SPPLinkUtil
+## 关于权限
+您需要申请蓝牙权限后才可以正常使用
+
+主要权限：
+```
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+<uses-permission android:name="android.permission.BLUETOOTH" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+```
+
+需要申请：
+```
+Manifest.permission.ACCESS_COARSE_LOCATION,
+Manifest.permission.ACCESS_FINE_LOCATION
+```
+
+若不声明或申请权限，可能导致无法查找到要连接的目标蓝牙，或无法正常使用功能。
+
+### 蓝牙 2.0 SPP
+
+1) 初始化 SPPLinkUtil
 ```
 private SPPLinkUtil spplinkUtil;
 //...
@@ -84,7 +117,7 @@ SPPLinkUtil.setUUID(uuid)
 spplinkUtil.link(context, 蓝牙名称);
 ```
 
-3) 其他方法
+2) 其他方法
 ```
 //发送消息给设备
 spplinkUtil.send(String);
@@ -103,7 +136,8 @@ SPPLinkUtil.DEBUGMODE = true;
 SPPLinkUtil.setBtPairingCode("666666");
 ```
 
-## 连接错误代码
+3) 连接错误代码
+
 字段 | 值 | 含义
 ---|---|---
 ERROR_NO_DEVICE | -1 | 附近无设备
@@ -113,26 +147,8 @@ ERROR_NOT_CONNECTED | -4 | 未建立连接
 ERROR_SOCKET_ERROR | -70 | Socket故障
 ERROR_BREAK | -50 | 连接中断
 
-## 关于权限
-您需要申请蓝牙权限后才可以正常使用
+4) 回传终止符（重要）
 
-主要权限：
-```
-<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-<uses-permission android:name="android.permission.BLUETOOTH" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-```
-
-需要申请：
-```
-Manifest.permission.ACCESS_COARSE_LOCATION,
-Manifest.permission.ACCESS_FINE_LOCATION
-```
-
-若不声明或申请权限，可能导致无法查找到要连接的目标蓝牙，或无法正常使用功能。
-
-## 回传终止符（重要）
 请与您的硬件开发者商定一个回传终止符。
 
 回传终止符应当位于硬件设备回传消息的末尾，它用于标记此次指令结束，因传输方式为 socket，鉴于 socket 粘包的特性，若不设置回传终止符则无法确定此次消息结束。
@@ -140,6 +156,138 @@ Manifest.permission.ACCESS_FINE_LOCATION
 默认的回传接收终止符为“\n”或“\r”或“\r\n”或“\n\r”，也就是说，如果硬件向 App 发送的消息末尾没有换行，则 SPPLinkUtil 不会认为本条消息结束，继续处于等待状态。
 
 只有接收到回传终止符，OnBtSocketResponseListener 中的回调才会有效，将之前缓存的消息传送出来。
+
+### 蓝牙 4.0 BLE
+```
+//初始化BLE
+bleLinkUtil = new BLELinkUtil();
+```
+
+初始化后就需要寻找附近的BLE设备了：
+```
+//设置查询监听（寻找附近的BLE设备）
+bleLinkUtil.setOnBLEScanListener(new OnBLEScanListener() {
+    
+    @Override
+    public BluetoothDevice onFindDevice(BluetoothDevice device) {
+        return null;
+    }
+    
+    @Override
+    public void getAllDevice(List<BluetoothDevice> devices) {
+        
+    }
+    
+});
+```
+设置监听器 setOnBLEScanListener，其中有两个接口，一个是 getAllDevice(List<BluetoothDevice> devices) 会重复性的返回所有当前已找到的设备列表，适用于以此制作 Adapter 来显示 ListView 列表。
+
+另一个方法 onFindDevice(BluetoothDevice device) 会在每查找到一个新设备时返回，不会重复，可以进行判断后直接 return 该设备直接连接该设备，适用于快速完成设备连接的业务流程。
+
+注：直接 return 方式连接前需要手动设置 bleLinkUtil.setOnBLEFindServiceListener(...) 连接状态回调监听器。
+
+另外要手动进行设备连接，可以使用以下方式：
+```
+bleLinkUtil.linkDevice(devices.get(position), new OnBLEFindServiceListener() {
+    @Override
+    public void onLink(boolean isSuccess, final List<BluetoothGattService> services) {
+        //对 services 进行处理，注意此时为异步线程。
+    }
+});
+```
+返回的 List<BluetoothGattService> services 为连接成功后该 BLE 设备提供的服务，可以通过 services.getUuid() 获取其 UUID，可以通过 services.getCharacteristics() 获取其通道。
+
+获取到的 Characteristics 对象，可使用 characteristics.getUuid() 判断其 UUID，判断是否为自己需要的通道。
+
+对于已知 Service 和 Characteristics 的 UUID 的情况下，也可通过以下方法直接获取通道：
+```
+BluetoothGattCharacteristic characteristic = bleLinkUtil.getCharacteristic(serviceUUID, childUUID);
+```
+
+获取到通道后，就可以进行主要的操作了：
+
+1) 进行消息读取：
+```
+bleLinkUtil.read(new OnBLEReadListener() {
+    @Override
+    public void onReadMessage(String msg) {
+        
+    }
+});
+```
+
+2) 进行消息的写入：
+```
+String text = editWrite.getText().toString().trim();
+if (!text.isEmpty()) {
+    bleLinkUtil.write(text, new OnBLEWriteListener() {
+        @Override
+        public void onWrite(boolean isSuccess) {
+            if (isSuccess) {
+                Toast.makeText(me, "发送成功", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(me, "发送失败", Toast.LENGTH_SHORT).show();
+            }
+        }
+    });
+}
+```
+
+大于20字节消息的写入：
+```
+String text = editWrite.getText().toString().trim();
+if (!text.isEmpty()) {
+    bleLinkUtil.writeBIG(text, new OnBLEWriteListener() {
+        @Override
+        public void onWrite(boolean isSuccess) {
+            if (isSuccess) {
+                Toast.makeText(me, "发送成功", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(me, "发送失败", Toast.LENGTH_SHORT).show();
+            }
+        }
+    });
+}
+```
+
+3) 进行通知消息的订阅：
+
+所谓通知消息，即申请订阅该通知后，设备端会不断通过蓝牙给手机端传送数据。
+```
+bleLinkUtil.startGetNotification(new OnBLENotificationListener() {
+    @Override
+    public void onGetData(String data) {
+        
+    }
+});
+```
+
+4) 额外方法
+
+停止搜寻设备：
+```
+bleLinkUtil.stopScan();
+```
+
+开始搜寻设备：
+```
+bleLinkUtil.start(Context);
+```
+
+判断通道属性：
+```
+//判断通道可读
+bleLinkUtil.ifCharacteristicReadable(Characteristic);
+
+//判断通道可写
+bleLinkUtil.ifCharacteristicWritable(Characteristic);
+
+//判断通道是否通知
+bleLinkUtil.ifCharacteristicNotifiable(Characteristic);
+
+//是否开启 DEBUG 模式（开启后本工具会持续打印日志信息用于辅助判断流程是否存在问题）
+bleLinkUtil.DEBUGMODE = true;
+```
 
 ## 开源协议
 ```
@@ -159,6 +307,12 @@ limitations under the License.
 ```
 
 ## 更新日志
+v1.0.5：
+- 修复了一些连接逻辑 bug；
+
+v1.0.4：
+- 解决蓝牙 4.0（BLE）传输数据20字节限制的问题。
+
 v1.0.3：
 - 修复了一些bug；
 
