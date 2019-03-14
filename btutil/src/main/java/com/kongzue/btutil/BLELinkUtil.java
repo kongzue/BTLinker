@@ -588,8 +588,10 @@ public class BLELinkUtil {
     
     public void end() {
         if (bluetoothGatt != null) {
-            bluetoothGatt.disconnect();
-            bluetoothGatt.close();
+            try{
+                bluetoothGatt.disconnect();
+                bluetoothGatt.close();
+            }catch (Exception e){}
         }
     }
 }
