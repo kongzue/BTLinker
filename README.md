@@ -2,10 +2,10 @@
 蓝牙连接封装库，适用于智能硬件蓝牙通讯，使用 SPP 服务（稍后会支持BLE）。
 
 <a href="https://github.com/kongzue/BTLinker/">
-<img src="https://img.shields.io/badge/BTLinker-1.0.5-green.svg" alt="Kongzue BTLinker">
+<img src="https://img.shields.io/badge/BTLinker-1.0.5.1-green.svg" alt="Kongzue BTLinker">
 </a>
-<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.5/link">
-<img src="https://img.shields.io/badge/Maven-1.0.5-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.5.1/link">
+<img src="https://img.shields.io/badge/Maven-1.0.5.1-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -47,14 +47,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.smart</groupId>
   <artifactId>btutil</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.5.1</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.smart:btutil:1.0.5'
+implementation 'com.kongzue.smart:btutil:1.0.5.1'
 ```
 
 ## 关于权限
