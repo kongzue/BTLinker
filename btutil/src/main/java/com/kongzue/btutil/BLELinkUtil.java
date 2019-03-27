@@ -15,8 +15,10 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.kongzue.btutil.interfaces.BluetoothOpenListener;
 import com.kongzue.btutil.interfaces.OnBLEFindServiceListener;
 import com.kongzue.btutil.interfaces.OnBLENotificationListener;
 import com.kongzue.btutil.interfaces.OnBLEReadListener;
@@ -39,6 +41,9 @@ import java.util.UUID;
  */
 public class BLELinkUtil {
     
+    public static final int ERROR_START_BT = -2;            //无法启动蓝牙
+    public static final int ERROR_START_BLE = -6;           //设备不支持BLE
+    
     public static boolean DEBUGMODE = false;                //是否打印日志
     
     private boolean isScanning = false;
@@ -51,42 +56,53 @@ public class BLELinkUtil {
     private BluetoothGatt bluetoothGatt;                                    //要连接的设备
     private List<BluetoothDevice> deviceList = new ArrayList<>();           //查询到的所有设备
     
-    //开始搜寻设备
-    public void start(Context c) {
-        this.context = c;
-        
-        if (!openBt(c)) {
+    public BLELinkUtil(Context context) {
+        this.context = context;
+    }
+    
+    //开启蓝牙设备
+    public void openBluetooth(BluetoothOpenListener openListener) {
+        if (!openBt()) {
             //启动蓝牙失败
-            
+            loge("启动蓝牙失败");
+            if (openListener!=null)openListener.onResponse(false,ERROR_START_BT,"启动蓝牙失败");
         } else {
             //启动蓝牙成功
-            doCheckBtOpened(c);
+            doCheckBtOpened(openListener);
         }
     }
     
-    private Timer linkTimer;
     private BluetoothAdapter bluetooth;                     //获取本地蓝牙适配器，即蓝牙设备
     
-    private void doCheckBtOpened(Context c) {
-        if (!c.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            loge("不支持BLE");
-            return;
+    private boolean openBt() {
+        bluetooth = BluetoothAdapter.getDefaultAdapter();    //获取本地蓝牙适配器，即蓝牙设备
+        if (bluetooth == null) {
+            //无法打开蓝牙
+            loge("无法打开蓝牙");
+            
+            return false;
         }
-        this.context = c;
-        if (linkTimer != null) linkTimer.cancel();
-        linkTimer = new Timer();
-        linkTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (bluetooth.isEnabled() != false) {
-                    doScan(context);
-                    linkTimer.cancel();
-                }
-            }
-        }, 1000, 1000);
+        //启动蓝牙
+        if (!bluetooth.isEnabled()) {
+            bluetooth.enable();
+        }
+        return true;
     }
     
-    private void doScan(Context c) {
+    private void doCheckBtOpened(BluetoothOpenListener openListener) {
+        if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            loge("设备不支持BLE");
+            openListener.onResponse(false,ERROR_START_BLE,"设备不支持BLE");
+            return;
+        }
+        if (bluetooth.isEnabled()) {
+            openListener.onResponse(true,0,null);
+        }
+    }
+    
+    //开始查找设备
+    public void doScan(OnBLEScanListener onBLEScanListener) {
+        setOnBLEScanListener(onBLEScanListener);
         bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         btAdapter = bluetoothManager.getAdapter();
         
@@ -108,21 +124,6 @@ public class BLELinkUtil {
         if (listener != null) onBLEFindServiceListener = listener;
         stopScan();
         bluetoothGatt = bluetoothDevice.connectGatt(context, true, bluetoothGattCallback);
-    }
-    
-    private boolean openBt(Context context) {
-        bluetooth = BluetoothAdapter.getDefaultAdapter();    //获取本地蓝牙适配器，即蓝牙设备
-        if (bluetooth == null) {
-            //无法打开蓝牙
-            loge("无法打开蓝牙");
-            
-            return false;
-        }
-        //启动蓝牙
-        if (bluetooth.isEnabled() == false) {
-            bluetooth.enable();
-        }
-        return true;
     }
     
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
@@ -164,9 +165,21 @@ public class BLELinkUtil {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {                      //发现服务的回调
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 log("发现服务成功：");
-                List<BluetoothGattService> supportedGattServices = bluetoothGatt.getServices();
-                if (onBLEFindServiceListener != null)
-                    onBLEFindServiceListener.onLink(true, supportedGattServices);
+                final List<BluetoothGattService> supportedGattServices = bluetoothGatt.getServices();
+                
+                if (onBLEFindServiceListener != null){
+                    if (context instanceof AppCompatActivity){
+                        ((AppCompatActivity)context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                onBLEFindServiceListener.onLink(true, supportedGattServices);
+                            }
+                        });
+                    }else{
+                        onBLEFindServiceListener.onLink(true, supportedGattServices);
+                    }
+                }
+                
                 if (DEBUGMODE) {
                     for (int i = 0; i < supportedGattServices.size(); i++) {
                         log("服务UUID：" + supportedGattServices.get(i).getUuid());
@@ -183,11 +196,22 @@ public class BLELinkUtil {
                 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     boolean result = bluetoothGatt.requestMtu(512);
-                    log("这是长度512：" + result);
+                    log("设置长度512：" + result);
                 }
             } else {
                 loge("发现服务失败：status=" + status);
-                if (onBLEFindServiceListener != null) onBLEFindServiceListener.onLink(false, null);
+                if (onBLEFindServiceListener != null) {
+                    if (context instanceof AppCompatActivity){
+                        ((AppCompatActivity)context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                onBLEFindServiceListener.onLink(false, null);
+                            }
+                        });
+                    }else{
+                        onBLEFindServiceListener.onLink(false, null);
+                    }
+                }
             }
         }
         
@@ -195,15 +219,36 @@ public class BLELinkUtil {
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {      //读操作的回调
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 log("读取成功：" + characteristic.getStringValue(0));
+                String r = "";
+                try {
+                    r = new String(characteristic.getValue(), "UTF-8");
+                } catch (Exception e) {
+                    r = characteristic.getStringValue(0);
+                }
+                final String result = r;
                 if (onBLEReadListener != null) {
-                    String result = "";
-                    try {
-                        result = new String(characteristic.getValue(), "UTF-8");
-                    } catch (Exception e) {
-                        result = characteristic.getStringValue(0);
+                    if (context instanceof AppCompatActivity){
+                        ((AppCompatActivity)context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                onBLEReadListener.onReadMessage(result);
+                            }
+                        });
+                    }else{
+                        onBLEReadListener.onReadMessage(result);
                     }
-                    onBLEReadListener.onReadMessage(result);
-                    onBLEReadListener = null;
+                }
+                if (onBLEWriteListenerl != null){
+                    if (context instanceof AppCompatActivity){
+                        ((AppCompatActivity)context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                onBLEWriteListenerl.onWrite(true, result);
+                            }
+                        });
+                    }else{
+                        onBLEWriteListenerl.onWrite(true, result);
+                    }
                 }
             }
         }
@@ -212,9 +257,9 @@ public class BLELinkUtil {
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {     //写操作的回调
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 log("写入成功");
-                if (onBLEWriteListenerl != null) onBLEWriteListenerl.onWrite(true);
+                //if (onBLEWriteListenerl != null) onBLEWriteListenerl.onWrite(true);
             } else {
-                if (onBLEWriteListenerl != null) onBLEWriteListenerl.onWrite(false);
+                if (onBLEWriteListenerl != null) onBLEWriteListenerl.onWrite(false, null);
             }
         }
         
@@ -222,14 +267,19 @@ public class BLELinkUtil {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {               //数据返回的回调
             super.onCharacteristicChanged(gatt, characteristic);
             try {
-                //log("value="+characteristic.getValue());
-                //log("StringValue="+new String(characteristic.getValue(), "UTF-8"))
-                //boolean readCharacteristic = bluetoothGatt.readCharacteristic(characteristic);
-                
-                //log("readCharacteristic:"+readCharacteristic);
-                
-                String d1 = new String(characteristic.getValue(), "UTF-8");
-                if (onBLENotificationListener != null) onBLENotificationListener.onGetData(d1);
+                final String result = new String(characteristic.getValue(), "UTF-8");
+                if (onBLENotificationListener != null){
+                    if (context instanceof AppCompatActivity){
+                        ((AppCompatActivity)context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                onBLENotificationListener.onGetData(result);
+                            }
+                        });
+                    }else{
+                        onBLENotificationListener.onGetData(result);
+                    }
+                }
             } catch (Exception e) {
             
             }
@@ -312,7 +362,7 @@ public class BLELinkUtil {
             characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
             return bluetoothGatt.writeCharacteristic(characteristic);
         } else {
-            listener.onWrite(false);
+            if (onBLEWriteListenerl != null) onBLEWriteListenerl.onWrite(false, null);
             return false;
         }
     }
@@ -338,7 +388,7 @@ public class BLELinkUtil {
             characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
             return bluetoothGatt.writeCharacteristic(characteristic);
         } else {
-            listener.onWrite(false);
+            onBLEWriteListenerl.onWrite(false, null);
             return false;
         }
     }
@@ -368,8 +418,8 @@ public class BLELinkUtil {
                     }
                     boolean result = write(serviceUUID, characteristicUUID, txBuffer, null);
                     if (!result) {
-                        if (listener != null) {
-                            listener.onWrite(false);
+                        if (onBLEWriteListenerl != null) {
+                            onBLEWriteListenerl.onWrite(false, null);
                             return;
                         }
                     }
@@ -379,8 +429,8 @@ public class BLELinkUtil {
                         e.printStackTrace();
                     }
                 }
-                if (listener != null) {
-                    listener.onWrite(true);
+                if (onBLEWriteListenerl != null) {
+                    onBLEWriteListenerl.onWrite(true, null);
                 }
             }
         });
@@ -414,8 +464,8 @@ public class BLELinkUtil {
                     }
                     boolean result = write(txBuffer, null);
                     if (!result) {
-                        if (listener != null) {
-                            listener.onWrite(false);
+                        if (onBLEWriteListenerl != null) {
+                            onBLEWriteListenerl.onWrite(false, null);
                             return;
                         }
                     }
@@ -425,8 +475,8 @@ public class BLELinkUtil {
                         e.printStackTrace();
                     }
                 }
-                if (listener != null) {
-                    listener.onWrite(true);
+                if (onBLEWriteListenerl != null) {
+                    onBLEWriteListenerl.onWrite(true, null);
                 }
             }
         });
@@ -588,10 +638,11 @@ public class BLELinkUtil {
     
     public void end() {
         if (bluetoothGatt != null) {
-            try{
+            try {
                 bluetoothGatt.disconnect();
                 bluetoothGatt.close();
-            }catch (Exception e){}
+            } catch (Exception e) {
+            }
         }
     }
 }

@@ -5,8 +5,10 @@ package com.kongzue.btutil.interfaces;
  * Github: https://github.com/kongzue/
  * Homepage: http://kongzue.com/
  * Mail: myzcxhh@live.cn
- * CreateTime: 2019/1/9 21:15
+ * CreateTime: 2019/3/27 16:36
  */
-public interface OnBLEWriteListener {
-    void onWrite(boolean isSuccess,String returnMsg);
+public interface BluetoothOpenListener {
+    
+    void onResponse(boolean isSuccess,int errorCode,String errorMsg);
+    
 }

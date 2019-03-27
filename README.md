@@ -306,7 +306,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-## 更新日志
+## 更新日
 v1.0.5：
 - 修复了一些连接逻辑 bug；
 
