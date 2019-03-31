@@ -101,20 +101,31 @@ public class BLELinkUtil {
     }
     
     //开始查找设备
-    public void doScan(OnBLEScanListener onBLEScanListener) {
-        setOnBLEScanListener(onBLEScanListener);
+    public void doScan(OnBLEScanListener listener) {
+        if (listener!=null)setOnBLEScanListener(listener);
         bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         btAdapter = bluetoothManager.getAdapter();
         
         isScanning = true;
         btAdapter.startLeScan(leScanCallback);
         
-        Looper.prepare();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 isScanning = false;
                 btAdapter.stopLeScan(leScanCallback);
+                if (onBLEScanListener!=null) {
+                    if (context instanceof AppCompatActivity) {
+                        ((AppCompatActivity) context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                onBLEScanListener.onStop();
+                            }
+                        });
+                    } else {
+                        onBLEScanListener.onStop();
+                    }
+                }
             }
         }, 10 * 1000);
     }

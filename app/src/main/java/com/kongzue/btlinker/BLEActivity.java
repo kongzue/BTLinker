@@ -89,7 +89,7 @@ public class BLEActivity extends AppCompatActivity {
         
         deviceList = new ArrayList<>();
         
-        bleLinkUtil = new BLELinkUtil();
+        bleLinkUtil = new BLELinkUtil(me);
         
         bleLinkUtil.setOnBLEScanListener(new OnBLEScanListener() {
             
@@ -110,7 +110,12 @@ public class BLEActivity extends AppCompatActivity {
                 }
                 refreshDeviceList();
             }
+    
+            @Override
+            public void onStop() {
             
+            }
+    
         });
         
         btnLink.setOnClickListener(new View.OnClickListener() {
@@ -121,7 +126,7 @@ public class BLEActivity extends AppCompatActivity {
                     bleLinkUtil.stopScan();
                 } else {
                     btnLink.setText("停止搜索");
-                    bleLinkUtil.start(me);
+                    bleLinkUtil.doScan(null);
                 }
             }
         });

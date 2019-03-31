@@ -17,4 +17,6 @@ public interface OnBLEScanListener {
     BluetoothDevice onFindDevice(BluetoothDevice device);
     
     void getAllDevice(List<BluetoothDevice> devices);
+    
+    void onStop();
 }
