@@ -279,15 +279,18 @@ public class BLELinkUtil {
             super.onCharacteristicChanged(gatt, characteristic);
             try {
                 final String result = new String(characteristic.getValue(), "UTF-8");
+                log("notify:"+result);
                 if (onBLENotificationListener != null){
                     if (context instanceof AppCompatActivity){
                         ((AppCompatActivity)context).runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                onBLEWriteListenerl.onWrite(true,result);
                                 onBLENotificationListener.onGetData(result);
                             }
                         });
                     }else{
+                        onBLEWriteListenerl.onWrite(true,result);
                         onBLENotificationListener.onGetData(result);
                     }
                 }

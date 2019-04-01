@@ -227,9 +227,10 @@ public class BLEActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String text = editWrite.getText().toString().trim();
                 if (!text.isEmpty()) {
-                    bleLinkUtil.write(text, new OnBLEWriteListener() {
+                    bleLinkUtil.write(text + "\r\n", new OnBLEWriteListener() {
                         @Override
                         public void onWrite(boolean isSuccess,String readStr) {
+                            Log.e(">>>", "onWrite: "+readStr );
                             if (isSuccess) {
                                 Toast.makeText(me, "发送成功", Toast.LENGTH_SHORT).show();
                             } else {
