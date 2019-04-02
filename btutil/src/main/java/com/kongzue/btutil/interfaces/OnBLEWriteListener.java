@@ -8,5 +8,5 @@ package com.kongzue.btutil.interfaces;
  * CreateTime: 2019/1/9 21:15
  */
 public interface OnBLEWriteListener {
-    void onWrite(boolean isSuccess,String returnMsg);
+    boolean onWrite(boolean isSuccess,String returnMsg);
 }

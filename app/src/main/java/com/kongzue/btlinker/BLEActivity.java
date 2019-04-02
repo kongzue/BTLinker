@@ -95,6 +95,9 @@ public class BLEActivity extends AppCompatActivity {
             
             @Override
             public BluetoothDevice onFindDevice(BluetoothDevice device) {
+                if (device.getAddress().equals("D8:B0:4C:CC:70:EF")) {
+                    return device;
+                }
                 return null;
             }
             
@@ -229,13 +232,14 @@ public class BLEActivity extends AppCompatActivity {
                 if (!text.isEmpty()) {
                     bleLinkUtil.write(text + "\r\n", new OnBLEWriteListener() {
                         @Override
-                        public void onWrite(boolean isSuccess,String readStr) {
+                        public boolean onWrite(boolean isSuccess,String readStr) {
                             Log.e(">>>", "onWrite: "+readStr );
                             if (isSuccess) {
                                 Toast.makeText(me, "发送成功", Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(me, "发送失败", Toast.LENGTH_SHORT).show();
                             }
+                            return true;
                         }
                     });
                 }
@@ -245,13 +249,14 @@ public class BLEActivity extends AppCompatActivity {
         btnNotify.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                bleLinkUtil.startGetNotification(new OnBLENotificationListener() {
+                bleLinkUtil.startGetNotification("0003cdd0-0000-1000-8000-00805f9b0131","0003cdd1-0000-1000-8000-00805f9b0131",new OnBLENotificationListener() {
                     @Override
                     public void onGetData(String data) {
                         Log.i(">>>", "onReadMessage: "+data);
                         txtRead.setText(txtRead.getText().toString()+"\n"+data);
                     }
                 });
+                Toast.makeText(me,"已开启通知",Toast.LENGTH_SHORT).show();
             }
         });
     }
