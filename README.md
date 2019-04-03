@@ -160,14 +160,14 @@ ERROR_BREAK | -50 | 连接中断
 只有接收到回传终止符，OnBtSocketResponseListener 中的回调才会有效，将之前缓存的消息传送出来。
 
 ### 蓝牙 4.0 BLE
-初始化BLE组件
+>初始化BLE组件
 ```
 bleLinkUtil = new BLELinkUtil();
 ```
 
 使用步骤一般为 **开启蓝牙 → 扫描并连接设备 → 连接成功后设置服务通道扫描监听器回调**
 
-开启蓝牙
+>开启蓝牙
 ```
 bleLinkUtil.openBluetooth(new BluetoothOpenListener() {
     @Override
@@ -177,7 +177,7 @@ bleLinkUtil.openBluetooth(new BluetoothOpenListener() {
 }
 ```
 
-初始化后就需要寻找附近的BLE设备了：
+>初始化后就需要寻找附近的BLE设备了：
 ```
 //设置查询监听（寻找附近的BLE设备）
 bleLinkUtil.doScan(new OnBLEScanListener() {
@@ -197,13 +197,13 @@ bleLinkUtil.doScan(new OnBLEScanListener() {
     }
 );
 ```
-设置监听器 setOnBLEScanListener，其中有两个接口，一个是 getAllDevice(List<BluetoothDevice> devices) 会重复性的返回所有当前已找到的设备列表，适用于以此制作 Adapter 来显示 ListView 列表。
+>设置监听器 setOnBLEScanListener，其中有两个接口，一个是 getAllDevice(List<BluetoothDevice> devices) 会重复性的返回所有当前已找到的设备列表，适用于以此制作 Adapter 来显示 ListView 列表。
 
 另一个方法 onFindDevice(BluetoothDevice device) 会在每查找到一个新设备时返回，不会重复，可以进行判断后直接 return 该设备直接连接该设备，适用于快速完成设备连接的业务流程。
 
 注：直接 return 方式连接前需要手动设置 bleLinkUtil.setOnBLEFindServiceListener(...) 连接状态回调监听器。
 
-另外要手动进行设备连接，可以使用以下方式：
+>另外要手动进行设备连接，可以使用以下方式：
 ```
 bleLinkUtil.linkDevice(devices.get(position), new OnBLEFindServiceListener() {
     @Override
@@ -221,7 +221,12 @@ bleLinkUtil.linkDevice(devices.get(position), new OnBLEFindServiceListener() {
 BluetoothGattCharacteristic characteristic = bleLinkUtil.getCharacteristic(serviceUUID, childUUID);
 ```
 
-获取到通道后，就可以进行主要的操作了：
+也可以直接设置接下来要操作的通道：
+```
+bleLinkUtil.setUUID(serviceUUID, childUUID);
+```
+
+>获取到通道后，就可以进行主要的操作了：
 
 1) 进行消息读取：
 ```
