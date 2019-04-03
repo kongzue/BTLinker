@@ -318,7 +318,7 @@ BleLinkUtil.messageEnd = "\r\n";
 bleLinkUtil.stopScan();
 ```
 
->结束事务（包括停止一切活动） **建议放在 Activity 的 onDestroy() 事件中执行**
+>结束事务（包括停止一切活动） **⚠ 建议放在 Activity 的 onDestroy() 事件中执行**
 ```
 bleLinkUtil.cancel();
 ```
