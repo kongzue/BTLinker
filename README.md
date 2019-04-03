@@ -178,19 +178,22 @@ bleLinkUtil.openBluetooth(new BluetoothOpenListener() {
 初始化后就需要寻找附近的BLE设备了：
 ```
 //设置查询监听（寻找附近的BLE设备）
-bleLinkUtil.setOnBLEScanListener(new OnBLEScanListener() {
-    
+bleLinkUtil.doScan(new OnBLEScanListener() {
     @Override
     public BluetoothDevice onFindDevice(BluetoothDevice device) {
-        return null;
+    
     }
     
     @Override
     public void getAllDevice(List<BluetoothDevice> devices) {
-        
+    
     }
     
-});
+    @Override
+    public void onStop() {
+    
+    }
+);
 ```
 设置监听器 setOnBLEScanListener，其中有两个接口，一个是 getAllDevice(List<BluetoothDevice> devices) 会重复性的返回所有当前已找到的设备列表，适用于以此制作 Adapter 来显示 ListView 列表。
 
@@ -298,9 +301,9 @@ bleLinkUtil.startGetNotification(SERVICE_UUID, NOTIFY_CHARACTERISTIC_UUID, new O
 bleLinkUtil.stopScan();
 ```
 
-开始搜寻设备：
+结束事务（包括停止一切活动）
 ```
-bleLinkUtil.start(Context);
+bleLinkUtil.cancel();
 ```
 
 判断通道属性：
@@ -317,8 +320,6 @@ bleLinkUtil.ifCharacteristicNotifiable(Characteristic);
 //是否开启 DEBUG 模式（开启后本工具会持续打印日志信息用于辅助判断流程是否存在问题）
 bleLinkUtil.DEBUGMODE = true;
 
-//结束事务（包括停止一切活动）
-bleLinkUtil.cancel();
 ```
 
 ## 开源协议
