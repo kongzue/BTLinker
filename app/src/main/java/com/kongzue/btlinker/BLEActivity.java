@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 
 public class BLEActivity extends AppCompatActivity {
+    
+    public static final String AUTO_LINK_DEVICE_MAC = "D8:B0:4C:CC:70:EF";
 
     private LinearLayout boxDevice;
     private Button btnLink;
@@ -95,14 +97,16 @@ public class BLEActivity extends AppCompatActivity {
             
             @Override
             public BluetoothDevice onFindDevice(BluetoothDevice device) {
-                if (device.getAddress().equals("D8:B0:4C:CC:70:EF")) {
-                    return device;
-                }
+                //自动连接方法：
+                //if (device.getAddress().equals(AUTO_LINK_DEVICE_MAC)) {
+                //    return device;
+                //}
                 return null;
             }
             
             @Override
             public void getAllDevice(List<BluetoothDevice> devices) {
+                //查询所有附近BLE蓝牙设备并更新到列表
                 me.devices = devices;
                 deviceList.clear();
                 for (BluetoothDevice device : devices) {
@@ -116,6 +120,7 @@ public class BLEActivity extends AppCompatActivity {
     
             @Override
             public void onStop() {
+                //超时或停止搜寻
             
             }
     

@@ -43,6 +43,9 @@ public class BLELinkUtil {
     public static final int ERROR_START_BT = -2;            //无法启动蓝牙
     public static final int ERROR_START_BLE = -6;           //设备不支持BLE
     
+    public static String messageStart = "$";                //约定一条消息的头
+    public static String messageEnd = "\r\n";               //约定一条消息的尾
+    
     public static boolean DEBUGMODE = false;                //是否打印日志
     
     private boolean isScanning = false;
@@ -328,23 +331,12 @@ public class BLELinkUtil {
             super.onCharacteristicChanged(gatt, characteristic);
             try {
                 String resultCache = "";
-                messageCache = messageCache + new String(characteristic.getValue(), "UTF-8").replace("$", "\r\n$");
-                if (messageCache.contains("\r\n")) {
-                    String[] arrays = messageCache.split("\r\n");
+                messageCache = messageCache + new String(characteristic.getValue(), "UTF-8").replace(messageStart, messageEnd + messageStart);
+                if (messageCache.contains(messageEnd)) {
+                    String[] arrays = messageCache.split(messageEnd);
                     resultCache = arrays[0];
                     messageCache = arrays[1];
                 }
-                //if (messageCache.contains("$") && messageCache.contains("\r\n")) {
-                //    int start = messageCache.indexOf("$") + 1;
-                //    int end = messageCache.indexOf("\r\n");
-                //    resultCache = messageCache.substring(start, end);
-                //    messageCache = messageCache
-                //            .replace(resultCache, "")
-                //            .replace("$", "")
-                //            .replace("\r\n", "");
-                //}else{
-                //    log("cache: "+messageCache);
-                //}
                 
                 if (!isNull(resultCache)) {
                     final String result = resultCache;

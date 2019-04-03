@@ -2,10 +2,10 @@
 蓝牙连接封装库，适用于智能硬件蓝牙通讯，使用 SPP 服务（稍后会支持BLE）。
 
 <a href="https://github.com/kongzue/BTLinker/">
-<img src="https://img.shields.io/badge/BTLinker-1.0.6.0-green.svg" alt="Kongzue BTLinker">
+<img src="https://img.shields.io/badge/BTLinker-1.0.6.1-green.svg" alt="Kongzue BTLinker">
 </a>
-<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.6.0/link">
-<img src="https://img.shields.io/badge/Maven-1.0.6.0-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.6.1/link">
+<img src="https://img.shields.io/badge/Maven-1.0.6.1-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -40,6 +40,8 @@ Demo下载：https://fir.im/BTLinker
 
 要发送20字以上数据请使用 writeBIG(...) 方法，该方法的实现原理是将要发送的数据裁剪为多个20字节的数据包，每隔50毫秒发送一次，请与硬件端商量进行数据组包。
 
+由于 BLE 接收的消息可能存在粘包情况（上下两条消息发生断续或首尾相接的问题），为保证读取到的消息完整性，建议与设备端开发约定消息头及消息尾的字符，默认以“$”开头、以“\r\n”结尾为一条消息，可通过阅读详细文档设置修改，如果未读取到消息尾，回调方法可能发生不执行情况，请知悉。
+
 ## 使用方法
 1) 从 Maven 仓库或 jCenter 引入：
 Maven仓库：
@@ -47,14 +49,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.smart</groupId>
   <artifactId>btutil</artifactId>
-  <version>1.0.6.0</version>
+  <version>1.0.6.1</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.smart:btutil:1.0.6.0'
+implementation 'com.kongzue.smart:btutil:1.0.6.1'
 ```
 
 ## 关于权限
@@ -296,6 +298,16 @@ bleLinkUtil.startGetNotification(SERVICE_UUID, NOTIFY_CHARACTERISTIC_UUID, new O
 
 4) 额外方法
 
+设置消息头：
+```
+BleLinkUtil.messageStart = "$";
+```
+
+设置消息尾：
+```
+BleLinkUtil.messageEnd = "\r\n";
+```
+
 停止搜寻设备：
 ```
 bleLinkUtil.stopScan();
@@ -339,7 +351,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-## 更新日
+## 更新日志
+v1.0.6.1：
+- 新增 BLE 工具类消息头、消息尾设置；
+
 v1.0.6.0：
 - 更新 BLE 工具类并修复了一些 bug；
 
