@@ -303,27 +303,27 @@ bleLinkUtil.startGetNotification(SERVICE_UUID, NOTIFY_CHARACTERISTIC_UUID, new O
 
 4) 额外方法
 
-设置消息头：
+>设置消息头：
 ```
 BleLinkUtil.messageStart = "$";
 ```
 
-设置消息尾：
+>设置消息尾：
 ```
 BleLinkUtil.messageEnd = "\r\n";
 ```
 
-停止搜寻设备：
+>停止搜寻设备：
 ```
 bleLinkUtil.stopScan();
 ```
 
-结束事务（包括停止一切活动）
+>结束事务（包括停止一切活动） **建议放在 Activity 的 onDestroy() 事件中执行**
 ```
 bleLinkUtil.cancel();
 ```
 
-判断通道属性：
+>判断通道属性：
 ```
 //判断通道可读
 bleLinkUtil.ifCharacteristicReadable(Characteristic);
