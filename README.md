@@ -2,10 +2,10 @@
 蓝牙连接封装库，适用于智能硬件蓝牙通讯，使用 SPP 服务（稍后会支持BLE）。
 
 <a href="https://github.com/kongzue/BTLinker/">
-<img src="https://img.shields.io/badge/BTLinker-1.0.5.1-green.svg" alt="Kongzue BTLinker">
+<img src="https://img.shields.io/badge/BTLinker-1.0.6.0-green.svg" alt="Kongzue BTLinker">
 </a>
-<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.5.1/link">
-<img src="https://img.shields.io/badge/Maven-1.0.5.1-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.6.0/link">
+<img src="https://img.shields.io/badge/Maven-1.0.6.0-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -47,14 +47,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.smart</groupId>
   <artifactId>btutil</artifactId>
-  <version>1.0.5.1</version>
+  <version>1.0.6.0</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.smart:btutil:1.0.5.1'
+implementation 'com.kongzue.smart:btutil:1.0.6.0'
 ```
 
 ## 关于权限
@@ -158,9 +158,21 @@ ERROR_BREAK | -50 | 连接中断
 只有接收到回传终止符，OnBtSocketResponseListener 中的回调才会有效，将之前缓存的消息传送出来。
 
 ### 蓝牙 4.0 BLE
+初始化BLE组件
 ```
-//初始化BLE
 bleLinkUtil = new BLELinkUtil();
+```
+
+使用步骤一般为 开启蓝牙 → 扫描并连接设备 → 连接成功后设置服务通道扫描监听器回调
+
+开启蓝牙
+```
+bleLinkUtil.openBluetooth(new BluetoothOpenListener() {
+    @Override
+    public void onResponse(boolean isSuccess, int errorCode, String errorMsg) {
+    
+    }
+}
 ```
 
 初始化后就需要寻找附近的BLE设备了：
@@ -222,16 +234,21 @@ String text = editWrite.getText().toString().trim();
 if (!text.isEmpty()) {
     bleLinkUtil.write(text, new OnBLEWriteListener() {
         @Override
-        public void onWrite(boolean isSuccess) {
+        public boolean onWrite(boolean isSuccess,String returnMsg) {
             if (isSuccess) {
                 Toast.makeText(me, "发送成功", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(me, "发送失败", Toast.LENGTH_SHORT).show();
             }
+            return false;
         }
     });
 }
 ```
+
+OnBLEWriteListener 中回调参数 returnMsg 是在发送指令后，通过通道的 read 方式读取到的值，若该通道启用了通知，那么 OnBLEWriteListener 会被多次回调，且通知消息也会在 returnMsg 中回传，直到您执行 return true; 来代表您已处理回传的消息。
+
+之所以这么做，原因是部分硬件开发习惯性通过“通知”来回传指令消息，但通知是不断接收的，同时还会有其他通知回传，因此需要不停的判断是否读取到回传的“通知”成功后通过 return true 来停止判断。
 
 大于20字节消息的写入：
 ```
@@ -239,12 +256,13 @@ String text = editWrite.getText().toString().trim();
 if (!text.isEmpty()) {
     bleLinkUtil.writeBIG(text, new OnBLEWriteListener() {
         @Override
-        public void onWrite(boolean isSuccess) {
+        public boolean onWrite(boolean isSuccess,String returnMsg) {
             if (isSuccess) {
                 Toast.makeText(me, "发送成功", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(me, "发送失败", Toast.LENGTH_SHORT).show();
             }
+            return false;
         }
     });
 }
@@ -258,6 +276,17 @@ bleLinkUtil.startGetNotification(new OnBLENotificationListener() {
     @Override
     public void onGetData(String data) {
         
+    }
+});
+```
+
+额外的，可以通过以下代码订阅其他通道的通知：
+```
+//SERVICE_UUID 为服务的UUID，NOTIFY_CHARACTERISTIC_UUID 为指定通知管道的 UUID
+bleLinkUtil.startGetNotification(SERVICE_UUID, NOTIFY_CHARACTERISTIC_UUID, new OnBLENotificationListener() {
+    @Override
+    public void onGetData(String data) {
+        log("接收到通知: " + data);
     }
 });
 ```
@@ -287,6 +316,9 @@ bleLinkUtil.ifCharacteristicNotifiable(Characteristic);
 
 //是否开启 DEBUG 模式（开启后本工具会持续打印日志信息用于辅助判断流程是否存在问题）
 bleLinkUtil.DEBUGMODE = true;
+
+//结束事务（包括停止一切活动）
+bleLinkUtil.cancel();
 ```
 
 ## 开源协议
