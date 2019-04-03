@@ -339,6 +339,9 @@ limitations under the License.
 ```
 
 ## 更新日
+v1.0.6.0：
+- 更新 BLE 工具类并修复了一些 bug；
+
 v1.0.5：
 - 修复了一些连接逻辑 bug；
 
