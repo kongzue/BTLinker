@@ -304,7 +304,7 @@ public class BLELinkUtil {
                             }
                         });
                     } else {
-                        if (onBLEWriteListenerl.onWrite(true, result)){
+                        if (onBLEWriteListenerl.onWrite(true, result)) {
                             onBLEWriteListenerl = null;
                         }
                     }
@@ -329,47 +329,58 @@ public class BLELinkUtil {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {               //数据返回的回调
             super.onCharacteristicChanged(gatt, characteristic);
-            try {
-                String resultCache = "";
-                messageCache = messageCache + new String(characteristic.getValue(), "UTF-8").replace(messageStart, messageEnd + messageStart);
-                if (messageCache.contains(messageEnd)) {
-                    String[] arrays = messageCache.split(messageEnd);
-                    resultCache = arrays[0];
-                    messageCache = arrays[1];
-                }
-                
-                if (!isNull(resultCache)) {
-                    final String result = resultCache;
-                    log("notify:" + result);
-                    if (onBLENotificationListener != null) {
-                        if (context instanceof AppCompatActivity) {
-                            ((AppCompatActivity) context).runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (onBLEWriteListenerl != null) {
-                                        if (onBLEWriteListenerl.onWrite(true, result)) {
-                                            onBLEWriteListenerl = null;
+            synchronized (BLELinkUtil.class) {
+                try {
+                    String value = new String(characteristic.getValue(), "UTF-8");
+                    log("notify:" + replace(value, "\r\n", "\\r\\n"));
+                    String resultCache = "";
+                    log("读出缓存区：" + replace(messageCache,"\r\n", "\\r\\n"));
+                    messageCache = messageCache + replace(value,messageStart, messageEnd + messageStart);
+                    log("拼接后：" + replace(messageCache,"\r\n", "\\r\\n"));
+                    if (messageCache.contains(messageEnd)) {
+                        String[] arrays = messageCache.split(messageEnd);
+                        resultCache = arrays[0];
+                        messageCache = arrays[1];
+                        log("处理：" + replace(resultCache,"\r\n", "\\r\\n"));
+                        log("存入缓存区：" + replace(messageCache,"\r\n", "\\r\\n"));
+                    }
+                    
+                    if (!isNull(resultCache)) {
+                        final String result = resultCache;
+                        if (onBLENotificationListener != null) {
+                            if (context instanceof AppCompatActivity) {
+                                ((AppCompatActivity) context).runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (onBLEWriteListenerl != null) {
+                                            if (onBLEWriteListenerl.onWrite(true, result)) {
+                                                onBLEWriteListenerl = null;
+                                            }
                                         }
+                                        onBLENotificationListener.onGetData(result);
                                     }
-                                    onBLENotificationListener.onGetData(result);
+                                });
+                            } else {
+                                if (onBLEWriteListenerl != null) {
+                                    if (onBLEWriteListenerl.onWrite(true, result)) {
+                                        onBLEWriteListenerl = null;
+                                    }
                                 }
-                            });
-                        } else {
-                            if (onBLEWriteListenerl != null) {
-                                if (onBLEWriteListenerl.onWrite(true, result)) {
-                                    onBLEWriteListenerl = null;
-                                }
+                                onBLENotificationListener.onGetData(result);
                             }
-                            onBLENotificationListener.onGetData(result);
                         }
                     }
+                } catch (Exception e) {
+                
                 }
-            } catch (Exception e) {
-            
             }
-            
         }
     };
+    
+    private String replace(String value, String s, String s1) {
+        String newValue = new String(value);
+        return newValue.replace(s, s1);
+    }
     
     public BLELinkUtil setOnBLEScanListener(OnBLEScanListener onBLEScanListener) {
         this.onBLEScanListener = onBLEScanListener;
@@ -662,7 +673,7 @@ public class BLELinkUtil {
     }
     
     private void log(String msg) {
-        if (DEBUGMODE) Log.i(">>>", "BTLinkUtil:" + msg);
+        if (DEBUGMODE) Log.i("BLE", "BTLinkUtil:" + msg);
     }
     
     private static void loge(String msg) {
