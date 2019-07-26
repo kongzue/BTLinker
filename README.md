@@ -1,5 +1,5 @@
 # BTLinker
-蓝牙连接封装库，适用于智能硬件蓝牙通讯，使用 SPP 服务（稍后会支持BLE）。
+蓝牙连接封装库，适用于智能硬件蓝牙通讯，使用 SPP 服务以及 BLE。
 
 <a href="https://github.com/kongzue/BTLinker/">
 <img src="https://img.shields.io/badge/BTLinker-1.0.8-green.svg" alt="Kongzue BTLinker">
