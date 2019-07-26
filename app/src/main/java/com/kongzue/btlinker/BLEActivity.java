@@ -129,13 +129,48 @@ public class BLEActivity extends AppCompatActivity {
         btnLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (bleLinkUtil.isScanning()) {
-                    btnLink.setText("开始搜索");
-                    bleLinkUtil.stopScan();
-                } else {
-                    btnLink.setText("停止搜索");
-                    bleLinkUtil.doScan(null);
-                }
+                //if (bleLinkUtil.isScanning()) {
+                //    btnLink.setText("开始搜索");
+                //    bleLinkUtil.stopScan();
+                //} else {
+                //    btnLink.setText("停止搜索");
+                //    bleLinkUtil.doScan(null);
+                //}
+                progressDialog = ProgressDialog.show(me, "连接中", "请稍候...");
+                bleLinkUtil.linkDevice("08:7C:BE:88:F3:04",new OnBLEFindServiceListener() {
+                    @Override
+                    public void onLink(boolean isSuccess, final List<BluetoothGattService> services) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressDialog.dismiss();
+                                boxDevice.setVisibility(View.GONE);
+                                boxService.setVisibility(View.VISIBLE);
+                
+                                serviceList = new ArrayList<>();
+                                for (int i = 0; i < services.size(); i++) {
+                                    Map<String, String> map = new HashMap<>();
+                                    map.put("title", "服务：" + GattAttributes.lookup(services.get(i).getUuid().toString(), ""));
+                                    map.put("uuid", services.get(i).getUuid().toString());
+                                    map.put("service", "");
+                                    serviceList.add(map);
+                    
+                                    List<BluetoothGattCharacteristic> listGattCharacteristic = services.get(i).getCharacteristics();
+                                    for (int j = 0; j < listGattCharacteristic.size(); j++) {
+                                        BluetoothGattCharacteristic gattCharacteristic = listGattCharacteristic.get(j);
+                        
+                                        map = new HashMap<>();
+                                        map.put("title", "成员：" + GattAttributes.lookup(listGattCharacteristic.get(j).getUuid().toString(), "") + bleLinkUtil.getPorperties(me, gattCharacteristic));
+                                        map.put("uuid", listGattCharacteristic.get(j).getUuid().toString());
+                                        map.put("service", services.get(i).getUuid().toString());
+                                        serviceList.add(map);
+                                    }
+                                    refreshServiceList();
+                                }
+                            }
+                        });
+                    }
+                });
             }
         });
         

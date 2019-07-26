@@ -64,6 +64,8 @@ public class BLELinkUtil {
     
     public BLELinkUtil(Context context) {
         this.context = context;
+        bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        btAdapter = bluetoothManager.getAdapter();
     }
     
     //开启蓝牙设备
@@ -125,8 +127,6 @@ public class BLELinkUtil {
     //开始查找设备
     public void doScan(OnBLEScanListener listener) {
         if (listener != null) setOnBLEScanListener(listener);
-        bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        btAdapter = bluetoothManager.getAdapter();
         
         isScanning = true;
         btAdapter.startLeScan(leScanCallback);
@@ -157,6 +157,14 @@ public class BLELinkUtil {
         if (listener != null) onBLEFindServiceListener = listener;
         stopScan();
         bluetoothGatt = bluetoothDevice.connectGatt(context, true, bluetoothGattCallback);
+    }
+    
+    //连接指定Mac地址的设备
+    public void linkDevice(String macAddress, OnBLEFindServiceListener listener) {
+        if (listener != null) onBLEFindServiceListener = listener;
+        stopScan();
+        BluetoothDevice device = btAdapter.getRemoteDevice(macAddress);
+        bluetoothGatt = device.connectGatt(context, true, bluetoothGattCallback);
     }
     
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {

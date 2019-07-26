@@ -2,10 +2,10 @@
 蓝牙连接封装库，适用于智能硬件蓝牙通讯，使用 SPP 服务（稍后会支持BLE）。
 
 <a href="https://github.com/kongzue/BTLinker/">
-<img src="https://img.shields.io/badge/BTLinker-1.0.7-green.svg" alt="Kongzue BTLinker">
+<img src="https://img.shields.io/badge/BTLinker-1.0.8-green.svg" alt="Kongzue BTLinker">
 </a>
-<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.7/link">
-<img src="https://img.shields.io/badge/Maven-1.0.7-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/BTLinker/1.0.8/link">
+<img src="https://img.shields.io/badge/Maven-1.0.8-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -18,7 +18,7 @@ Demo预览图如下：
 
 ![BTLinker](https://github.com/kongzue/Res/raw/master/app/src/main/res/mipmap-xxxhdpi/img_btlinker.jpg)
 
-Demo下载：https://fir.im/BTLinker
+Demo下载：<https://fir.im/BTLinker>
 
 ## ⚠前言
 
@@ -49,14 +49,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.smart</groupId>
   <artifactId>btutil</artifactId>
-  <version>1.0.7</version>
+  <version>1.0.8</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.smart:btutil:1.0.7'
+implementation 'com.kongzue.smart:btutil:1.0.8'
 ```
 
 ## 关于权限
@@ -212,6 +212,15 @@ bleLinkUtil.linkDevice(devices.get(position), new OnBLEFindServiceListener() {
     }
 });
 ```
+>如果已知要连接的 BLE 设备的 Mac 地址，可以使用以下方式，注意此时不需要上述扫描附近 BLE 设备的过程：
+```
+bleLinkUtil.linkDevice(macAddress, new OnBLEFindServiceListener() {
+    @Override
+    public void onLink(boolean isSuccess, final List<BluetoothGattService> services) {
+        //对 services 进行处理，注意此时为异步线程。
+    }
+});
+```
 返回的 List<BluetoothGattService> services 为连接成功后该 BLE 设备提供的服务，可以通过 services.getUuid() 获取其 UUID，可以通过 services.getCharacteristics() 获取其通道。
 
 获取到的 Characteristics 对象，可使用 characteristics.getUuid() 判断其 UUID，判断是否为自己需要的通道。
@@ -357,6 +366,9 @@ limitations under the License.
 ```
 
 ## 更新日志
+v1.0.8:
+- linkDevice(mac, listener) 新增使用 mac 地址连接设备；
+
 v1.0.7:
 - 完善和修复 bug；
 
