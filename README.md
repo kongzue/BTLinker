@@ -18,7 +18,7 @@ Demo预览图如下：
 
 ![BTLinker](https://github.com/kongzue/Res/raw/master/app/src/main/res/mipmap-xxxhdpi/img_btlinker.jpg)
 
-Demo下载：<https://fir.im/BTLinker>
+Demo下载：<http://beta.kongzue.com/BTLinker>
 
 ## ⚠前言
 
